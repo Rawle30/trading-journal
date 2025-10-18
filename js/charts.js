@@ -192,3 +192,9 @@ export function destroyAllCharts() {
   destroyEquityCurveChart();
   destroySymbolPieChart();
 }
+plugins: {
+  zoom: {
+    pan: { enabled: true, mode: 'x' },
+    zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
+  }
+}
