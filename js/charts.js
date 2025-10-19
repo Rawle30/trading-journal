@@ -198,3 +198,26 @@ plugins: {
     zoom: { wheel: { enabled: true }, pinch: { enabled: true }, mode: 'x' }
   }
 }
+export function renderEquityCurve(data, labels) {
+  const ctx = document.getElementById('equity-curve-canvas').getContext('2d');
+  const config = {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Equity Curve',
+        data,
+        borderColor: 'green',
+        backgroundColor: 'rgba(0,255,0,0.1)',
+        fill: true,
+        tension: 0.4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      layout: { padding: 10 }
+    }
+  };
+  new Chart(ctx, config);
+}
