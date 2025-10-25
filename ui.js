@@ -78,12 +78,12 @@ function renderCharts(currentPrices = {}) {
         data: { labels, datasets: [{ data: values, backgroundColor: colors }] }
     });
     const legend = document.getElementById('pieLegend');
-    legend.innerHTML = labels.map((l, i) => `<li style="color: ${colors[i]};">${l}: $${values[i].toFixed(2)}</li>`).join('');
+    legend.innerHTML = labels.map((l, i) => `<li style="color: ${colors[i % colors.length]};">${l}: $${values[i].toFixed(2)}</li>`).join('');
 }
 
 function renderTicker(prices) {
     const ticker = document.getElementById('ticker');
-    ticker.innerHTML = Object.entries(prices).map(([sym, price]) => `${sym}: $${price.toFixed(2)}`).join(' | ');
+    ticker.innerHTML = Object.entries(prices).map(([sym, price]) => `${sym}: $${price?.toFixed(2) || 'N/A'}`).join(' | ');
 }
 
 function renderAlerts() {
