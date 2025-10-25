@@ -54,7 +54,32 @@
                 <input type="number" id="strike" placeholder="Strike">
                 <input type="date" id="expDate">
                 <input type="number" id="multiplier" placeholder="Multiplier" value="100">
-                <input type="text" id="strategy" placeholder="Strategy (e.g., Long Call, Iron Condor)">
+                <select id="strategy">
+                    <option value="">Select Strategy</option>
+                    <option value="Long Call">Long Call</option>
+                    <option value="Long Put">Long Put</option>
+                    <option value="Short Call">Short Call</option>
+                    <option value="Short Put">Short Put</option>
+                    <option value="Covered Call">Covered Call</option>
+                    <option value="Cash-Secured Put">Cash-Secured Put</option>
+                    <option value="Bull Call Spread">Bull Call Spread</option>
+                    <option value="Bear Put Spread">Bear Put Spread</option>
+                    <option value="Bull Put Spread">Bull Put Spread</option>
+                    <option value="Bear Call Spread">Bear Call Spread</option>
+                    <option value="Long Straddle">Long Straddle</option>
+                    <option value="Long Strangle">Long Strangle</option>
+                    <option value="Short Straddle">Short Straddle</option>
+                    <option value="Short Strangle">Short Strangle</option>
+                    <option value="Iron Condor">Iron Condor</option>
+                    <option value="Iron Butterfly">Iron Butterfly</option>
+                    <option value="Protective Collar">Protective Collar</option>
+                    <option value="Married Put">Married Put</option>
+                    <option value="Long Call Butterfly">Long Call Butterfly</option>
+                    <option value="Calendar Spread">Calendar Spread</option>
+                    <option value="Diagonal Spread">Diagonal Spread</option>
+                    <option value="Custom">Custom</option>
+                </select>
+                <input type="text" id="customStrategy" placeholder="Custom Strategy" style="display:none;">
             </div>
             <button type="submit">Add/Update Trade</button>
         </form>
@@ -76,6 +101,8 @@
                         <th>Current Price</th>
                         <th>P/L</th>
                         <th>Dividend Gain (ETF)</th>
+                        <th>Div Yield (ETF)</th>
+                        <th>Last Div Pay Date (ETF)</th>
                         <th>Greeks (Option)</th>
                         <th>Risk/Reward</th>
                         <th>Notes</th>
