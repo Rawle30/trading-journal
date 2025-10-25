@@ -1,50 +1,135 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Trading Journal</title>
-
-  <!-- PWA Manifest -->
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#FE9900" />
-
-  <!-- Icons -->
-  <link rel="icon" href="icon-192.png" sizes="192x192" />
-  <link rel="apple-touch-icon" href="icon-512.png" />
-
-  <!-- Styles -->
-  <link rel="stylesheet" href="styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trading Journal</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <div id="app">
-    <!-- Your app layout goes here -->
-    <canvas id="equity-curve-canvas" style="height: 300px;"></canvas>
-    <canvas id="symbol-pie-chart"></canvas>
-    <form id="trade-form"></form>
-    <form id="alert-form"></form>
-    <table id="trades-table"><tbody></tbody></table>
-    <div id="alert-list"></div>
-  </div>
-
-  <!-- Load main module -->
-  <script type="module" src="js/main.js"></script>
-
-  <!-- Chart.js core -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-
-<!-- Plugins -->
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@2.2.1/dist/chartjs-plugin-annotation.min.js"></script>
-
-  <!-- Register service worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(reg => console.log('Service Worker registered:', reg.scope))
-        .catch(err => console.error('Service Worker registration failed:', err));
-    }
-  </script>
+    <header>
+        <div class="ticker-container">
+            <div id="ticker" class="ticker"></div>
+        </div>
+        <h1>Trading Journal</h1>
+        <button id="dark-mode-toggle">Toggle Dark Mode</button>
+        <button id="refresh-prices">Refresh Prices</button>
+    </header>
+    <div class="container">
+        <nav class="sidebar">
+            <ul>
+                <li><a href="#portfolio" class="active">Portfolio</a></li>
+                <li><a href="#trades">Trades</a></li>
+                <li><a href="#alerts">Alerts</a></li>
+                <li><a href="#settings">Settings</a></li>
+            </ul>
+        </nav>
+        <main>
+            <section id="portfolio" class="section active">
+                <div class="card equity-curve">
+                    <h2>Equity Curve</h2>
+                    <canvas id="equityChart"></canvas>
+                </div>
+                <div class="card symbol-distribution">
+                    <h2>Symbol Distribution</h2>
+                    <canvas id="pieChart"></canvas>
+                    <ul id="pieLegend"></ul>
+                </div>
+            </section>
+            <section id="trades" class="section">
+                <h2>Trades</h2>
+                <button id="add-trade">Add Trade</button>
+                <button id="export-csv">Export CSV</button>
+                <input type="file" id="import-csv" accept=".csv">
+                <table id="trades-table">
+                    <thead>
+                        <tr>
+                            <th>Type</th>
+                            <th>Symbol</th>
+                            <th>Qty</th>
+                            <th>Entry Price</th>
+                            <th>Entry Date</th>
+                            <th>Exit Price</th>
+                            <th>Exit Date</th>
+                            <th>P/L</th>
+                            <th>Broker</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <div id="pl-per-broker"></div>
+            </section>
+            <section id="alerts" class="section">
+                <h2>Recent Alerts</h2>
+                <table id="alerts-table">
+                    <thead>
+                        <tr>
+                            <th>Symbol</th>
+                            <th>Price</th>
+                            <th>Condition</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </section>
+            <section id="settings" class="section">
+                <h2>Settings</h2>
+                <form id="api-keys-form">
+                    <label>Alpha Vantage Key: <input type="text" id="alpha-key"></label>
+                    <label>Finnhub Key: <input type="text" id="finnhub-key"></label>
+                    <label>Polygon Key: <input type="text" id="polygon-key"></label>
+                    <button type="submit">Save Keys</button>
+                </form>
+            </section>
+            <section class="risk-analytics">
+                <h2>Risk Analytics</h2>
+                <p>Max Drawdown: <span id="max-drawdown"></span></p>
+                <p>Sharpe Ratio: <span id="sharpe-ratio"></span></p>
+            </section>
+        </main>
+    </div>
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <form id="trade-form">
+                <label>Type: <select id="asset-type">
+                    <option value="stock">Stock</option>
+                    <option value="crypto">Cryptocurrency</option>
+                    <option value="etf">ETF</option>
+                    <option value="option">Option</option>
+                </select></label>
+                <label>Symbol: <input type="text" id="symbol" required></label>
+                <label>Quantity: <input type="number" id="qty" step="0.0001" required></label>
+                <label>Entry Price: <input type="number" id="entry-price" step="0.01" required></label>
+                <label>Entry Date: <input type="date" id="entry-date" required></label>
+                <label>Exit Price: <input type="number" id="exit-price" step="0.01"></label>
+                <label>Exit Date: <input type="date" id="exit-date"></label>
+                <label>Broker: <input type="text" id="broker"></label>
+                <label>Notes: <textarea id="notes"></textarea></label>
+                <div id="option-fields" style="display:none;">
+                    <label>Multiplier: <input type="number" id="multiplier" value="100"></label>
+                    <label>Strategy: <select id="strategy">
+                        <!-- Options added in JS -->
+                    </select></label>
+                    <label>Strike: <input type="number" id="strike" step="0.01"></label>
+                    <label>Expiration: <input type="date" id="expiration"></label>
+                    <label>Call/Put: <select id="call-put"><option>Call</option><option>Put</option></select></label>
+                </div>
+                <div id="etf-fields" style="display:none;">
+                    <p>Dividend Info will be fetched on refresh.</p>
+                </div>
+                <button type="submit">Save</button>
+            </form>
+        </div>
+    </div>
+    <script src="api.js"></script>
+    <script src="data.js"></script>
+    <script src="ui.js"></script>
+    <script src="utils.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
 
