@@ -12,6 +12,12 @@ function renderTrades(currentPrices = {}) {
     tbody.innerHTML = '';
     trades.forEach((trade, index) => {
         const pl = calculatePl(trade, currentPrices[trade.symbol]);
+        let additional = '';
+        if (trade.type === 'etf') {
+            additional = `Div: $${trade.dividend?.toFixed(2) || ''}, Pay: ${trade.payDate || ''}, Yield: ${trade.yield?.toFixed(2) || ''}%, Gain: $${trade.dividendGain?.toFixed(2) || ''}`;
+        } else if (trade.type === 'option') {
+            additional = `Delta: ${trade.greeks?.delta?.toFixed(2) || ''}`;
+        }
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${trade.type}</td>
@@ -24,6 +30,7 @@ function renderTrades(currentPrices = {}) {
             <td class="${pl > 0 ? 'green' : pl < 0 ? 'red' : ''}">${pl.toFixed(2)}</td>
             <td>${trade.broker || ''}</td>
             <td>${trade.notes || ''}</td>
+            <td>${additional}</td>
             <td>
                 <button onclick="editTrade(${index})">Edit</button>
                 <button onclick="deleteTrade(${index}); renderTrades();">Delete</button>
@@ -31,6 +38,8 @@ function renderTrades(currentPrices = {}) {
         `;
         tbody.appendChild(row);
     });
+    const totalPl = getCombinedPl(currentPrices);
+    document.getElementById('total-pl').innerHTML = `<span class="${totalPl > 0 ? 'green' : totalPl < 0 ? 'red' : ''}">${totalPl.toFixed(2)}</span>`;
     renderPlPerBroker(currentPrices);
     renderRiskAnalytics();
 }
@@ -45,10 +54,10 @@ function renderPlPerBroker(currentPrices) {
     }
 }
 
-function renderCharts() {
+function renderCharts(currentPrices = {}) {
     // Equity Curve
     const equityCtx = document.getElementById('equityChart').getContext('2d');
-    const equityData = calculateEquityCurve();
+    const equityData = calculateEquityCurve(currentPrices);
     new Chart(equityCtx, {
         type: 'line',
         data: {
@@ -60,7 +69,7 @@ function renderCharts() {
 
     // Pie Chart
     const pieCtx = document.getElementById('pieChart').getContext('2d');
-    const dist = calculateSymbolDistribution({}); // Use current if available
+    const dist = calculateSymbolDistribution(currentPrices);
     const labels = Object.keys(dist);
     const values = Object.values(dist);
     const colors = ['#f00', '#0f0', '#00f', '#ff0']; // Extend as needed
@@ -78,7 +87,6 @@ function renderTicker(prices) {
 }
 
 function renderAlerts() {
-    // Placeholder: Recent price alerts, e.g., from trades
     const tbody = document.querySelector('#alerts-table tbody');
     tbody.innerHTML = trades.map(trade => `
         <tr>
@@ -90,7 +98,7 @@ function renderAlerts() {
 }
 
 function renderRiskAnalytics() {
-    const curve = calculateEquityCurve();
+    const curve = calculateEquityCurve({});
     const maxDd = calculateMaxDrawdown(curve);
     const sharpe = calculateSharpeRatio(getReturns(curve));
     document.getElementById('max-drawdown').textContent = `${maxDd.toFixed(2)}%`;
@@ -120,7 +128,7 @@ function showModal(trade = {}, index = null) {
         e.preventDefault();
         const newTrade = {
             type: document.getElementById('asset-type').value,
-            symbol: document.getElementById('symbol').value,
+            symbol: document.getElementById('symbol').value.toUpperCase(),
             qty: parseFloat(document.getElementById('qty').value),
             entryPrice: parseFloat(document.getElementById('entry-price').value),
             entryDate: document.getElementById('entry-date').value,
@@ -135,6 +143,9 @@ function showModal(trade = {}, index = null) {
             newTrade.strike = parseFloat(document.getElementById('strike').value);
             newTrade.expiration = document.getElementById('expiration').value;
             newTrade.callPut = document.getElementById('call-put').value;
+        }
+        if (!validateTrade(newTrade)) {
+            return;
         }
         if (index !== null) {
             updateTrade(index, newTrade);
