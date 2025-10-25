@@ -6,132 +6,103 @@
     <title>Trading Journal</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
 <body>
     <header>
-        <div class="ticker-container">
-            <div id="ticker" class="ticker"></div>
+        <div class="ticker">
+            <marquee id="tickerMarquee">Loading ticker...</marquee>
         </div>
-        <h1>Trading Journal</h1>
-        <button id="dark-mode-toggle">Toggle Dark Mode</button>
-        <button id="refresh-prices">Refresh Prices</button>
+        <button id="darkModeToggle">Toggle Dark Mode</button>
+        <button id="refreshPrices">Refresh Prices</button>
+        <select id="apiProvider">
+            <option value="alpha1">Alpha Vantage 1</option>
+            <option value="alpha2">Alpha Vantage 2</option>
+            <option value="finnhub">Finnhub</option>
+            <option value="polygon">Polygon</option>
+        </select>
+        <input type="text" id="apiKeyInput" placeholder="Enter API Key">
+        <button id="saveApiKey">Save API Key</button>
+        <input type="number" id="accountSize" placeholder="Account Size for Risk Calc" value="100000">
+        <button id="saveAccountSize">Save Account Size</button>
     </header>
-    <div class="container">
-        <nav class="sidebar">
-            <ul>
-                <li><a href="#portfolio" class="active">Portfolio</a></li>
-                <li><a href="#trades">Trades</a></li>
-                <li><a href="#alerts">Alerts</a></li>
-                <li><a href="#settings">Settings</a></li>
-            </ul>
-        </nav>
-        <main>
-            <section id="portfolio" class="section active">
-                <p>Total P/L: <span id="total-pl"></span></p>
-                <div class="card equity-curve">
-                    <h2>Equity Curve</h2>
-                    <canvas id="equityChart"></canvas>
-                </div>
-                <div class="card symbol-distribution">
-                    <h2>Symbol Distribution</h2>
-                    <canvas id="pieChart"></canvas>
-                    <ul id="pieLegend"></ul>
-                </div>
-            </section>
-            <section id="trades" class="section">
-                <h2>Trades</h2>
-                <button id="add-trade">Add Trade</button>
-                <button id="export-csv">Export CSV</button>
-                <input type="file" id="import-csv" accept=".csv">
-                <table id="trades-table">
-                    <thead>
-                        <tr>
-                            <th>Type</th>
-                            <th>Symbol</th>
-                            <th>Qty</th>
-                            <th>Entry Price</th>
-                            <th>Entry Date</th>
-                            <th>Exit Price</th>
-                            <th>Exit Date</th>
-                            <th>P/L</th>
-                            <th>Broker</th>
-                            <th>Notes</th>
-                            <th>Additional</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-                <div id="pl-per-broker"></div>
-            </section>
-            <section id="alerts" class="section">
-                <h2>Recent Alerts</h2>
-                <table id="alerts-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Price</th>
-                            <th>Condition</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </section>
-            <section id="settings" class="section">
-                <h2>Settings</h2>
-                <form id="api-keys-form">
-                    <label>Alpha Vantage Key: <input type="text" id="alpha-key"></label>
-                    <label>Finnhub Key: <input type="text" id="finnhub-key"></label>
-                    <label>Polygon Key: <input type="text" id="polygon-key"></label>
-                    <button type="submit">Save Keys</button>
-                </form>
-            </section>
-            <section class="risk-analytics">
-                <h2>Risk Analytics</h2>
-                <p>Max Drawdown: <span id="max-drawdown"></span></p>
-                <p>Sharpe Ratio: <span id="sharpe-ratio"></span></p>
-            </section>
-        </main>
-    </div>
-    <div id="modal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <form id="trade-form">
-                <label>Type: <select id="asset-type">
-                    <option value="stock">Stock</option>
-                    <option value="crypto">Cryptocurrency</option>
-                    <option value="etf">ETF</option>
-                    <option value="option">Option</option>
-                </select></label>
-                <label>Symbol: <input type="text" id="symbol" required></label>
-                <label>Quantity: <input type="number" id="qty" step="0.0001" required></label>
-                <label>Entry Price: <input type="number" id="entry-price" step="0.01" required></label>
-                <label>Entry Date: <input type="date" id="entry-date" required></label>
-                <label>Exit Price: <input type="number" id="exit-price" step="0.01"></label>
-                <label>Exit Date: <input type="date" id="exit-date"></label>
-                <label>Broker: <input type="text" id="broker"></label>
-                <label>Notes: <textarea id="notes"></textarea></label>
-                <div id="option-fields" style="display:none;">
-                    <label>Multiplier: <input type="number" id="multiplier" value="100"></label>
-                    <label>Strategy: <select id="strategy">
-                        <!-- Options added in JS -->
-                    </select></label>
-                    <label>Strike: <input type="number" id="strike" step="0.01"></label>
-                    <label>Expiration: <input type="date" id="expiration"></label>
-                    <label>Call/Put: <select id="call-put"><option>Call</option><option>Put</option></select></label>
-                </div>
-                <div id="etf-fields" style="display:none;">
-                    <p>Dividend Info will be fetched on refresh.</p>
-                </div>
-                <button type="submit">Save</button>
-            </form>
+
+    <section id="addTrade">
+        <form id="tradeForm">
+            <input type="hidden" id="editId">
+            <select id="tradeType">
+                <option value="stock">Stock</option>
+                <option value="crypto">Crypto</option>
+                <option value="etf">ETF</option>
+                <option value="option">Option</option>
+            </select>
+            <input type="text" id="symbol" placeholder="Symbol">
+            <input type="number" id="quantity" placeholder="Quantity" step="0.0001">
+            <input type="number" id="entryPrice" placeholder="Entry Price">
+            <input type="date" id="entryDate">
+            <input type="number" id="exitPrice" placeholder="Exit Price">
+            <input type="date" id="exitDate">
+            <input type="text" id="broker" placeholder="Broker">
+            <input type="number" id="stopLoss" placeholder="Stop Loss">
+            <input type="number" id="target" placeholder="Target">
+            <textarea id="notes" placeholder="Notes"></textarea>
+            <div id="optionFields" style="display:none;">
+                <select id="optionType">
+                    <option value="call">Call</option>
+                    <option value="put">Put</option>
+                </select>
+                <input type="number" id="strike" placeholder="Strike">
+                <input type="date" id="expDate">
+                <input type="number" id="multiplier" placeholder="Multiplier" value="100">
+                <input type="text" id="strategy" placeholder="Strategy (e.g., Long Call, Iron Condor)">
+            </div>
+            <button type="submit">Add/Update Trade</button>
+        </form>
+    </section>
+
+    <section id="tradesList">
+        <div style="overflow-x: auto;">
+            <table id="tradesTable">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Symbol</th>
+                        <th>Quantity</th>
+                        <th>Entry Price</th>
+                        <th>Entry Date</th>
+                        <th>Exit Price</th>
+                        <th>Exit Date</th>
+                        <th>Current Price</th>
+                        <th>P/L</th>
+                        <th>Dividend Gain (ETF)</th>
+                        <th>Greeks (Option)</th>
+                        <th>Risk/Reward</th>
+                        <th>Notes</th>
+                        <th>Broker</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
         </div>
-    </div>
-    <script src="api.js"></script>
-    <script src="data.js"></script>
-    <script src="ui.js"></script>
-    <script src="utils.js"></script>
-    <script src="app.js"></script>
+    </section>
+
+    <section id="summary">
+        <h2>Combined Profit/Loss: <span id="totalPL"></span></h2>
+        <h2>Total Dividend Gains: <span id="totalDividends"></span></h2>
+        <h2>Profit/Loss per Broker</h2>
+        <div id="brokerPL"></div>
+        <h2>Portfolio Graphs</h2>
+        <canvas id="plChart" width="400" height="200"></canvas>
+    </section>
+
+    <section id="importExport">
+        <input type="file" id="importCSV" accept=".csv">
+        <button id="exportCSV">Export CSV</button>
+    </section>
+
+    <script src="script.js"></script>
 </body>
 </html>
 
