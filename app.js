@@ -31,14 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentPrices = {};
         for (let trade of trades) {
             try {
-                currentPrices[trade.symbol] = await getCurrentPrice(trade.symbol, trade.type === 'crypto' ? 'crypto' : 'stock');
+                const currPrice = await getCurrentPrice(trade.symbol, trade.type === 'crypto' ? 'crypto' : 'stock');
+                currentPrices[trade.symbol] = currPrice;
                 if (trade.type === 'option') {
                     trade.greeks = await getOptionGreeks({
                         symbol: trade.symbol,
                         expiration: trade.expiration,
                         strike: trade.strike,
                         callPut: trade.callPut,
-                        currentPrice: currentPrices[trade.symbol]
+                        currentPrice: currPrice
                     });
                 }
                 if (trade.type === 'etf') {
@@ -46,18 +47,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (div) {
                         trade.dividend = div.dividend;
                         trade.payDate = div.payDate;
-                        trade.yield = div.yield || (div.dividend / currentPrices[trade.symbol] * 100);
+                        trade.yield = div.yield || (div.dividend / currPrice * 4 * 100); // Approx annual yield assuming quarterly
                         trade.dividendGain = div.dividend * trade.qty;
                     }
                 }
             } catch (error) {
                 console.error(`Error refreshing ${trade.symbol}:`, error);
+                alert(`Failed to refresh ${trade.symbol}: ${error.message}`);
             }
         }
         saveTrades();
         renderTrades(currentPrices);
         renderTicker(currentPrices);
-        renderCharts(); // Update with new prices if needed
+        renderCharts(currentPrices);
     });
 
     // API keys form
@@ -69,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         alert('Keys saved');
     });
     document.getElementById('alpha-key').value = localStorage.getItem('alphaKey') || '';
-    document.getElementById('finnhubKey').value = localStorage.getItem('finnhubKey') || '';
+    document.getElementById('finnhub-key').value = localStorage.getItem('finnhubKey') || '';
     document.getElementById('polygon-key').value = localStorage.getItem('polygonKey') || '';
 
     // Import/Export
@@ -84,24 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Type change
     document.getElementById('asset-type').addEventListener('change', toggleFields);
-
-    // Validation on save
-    const form = document.getElementById('trade-form');
-    const originalSubmit = form.onsubmit;
-    form.onsubmit = e => {
-        const trade = {}; // Build trade object
-        // ... (extract from form)
-        if (!validateTrade(trade)) {
-            e.preventDefault();
-            return;
-        }
-        originalSubmit(e);
-    };
 });
 
 async function startTicker() {
-    // Fetch prices for common symbols or from trades
-    const symbols = ['AAPL', 'GOOG', 'MSFT', 'TSLA', 'BTC/USD']; // Example + crypto
+    const symbols = ['AAPL', 'GOOG', 'MSFT', 'TSLA', 'BTC/USD'];
     const prices = {};
     for (let sym of symbols) {
         try {
@@ -109,5 +97,5 @@ async function startTicker() {
         } catch {}
     }
     renderTicker(prices);
-    setInterval(startTicker, 60000); // Refresh every min
+    setInterval(startTicker, 60000);
 }
