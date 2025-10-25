@@ -23,45 +23,41 @@ async function getCurrentPrice(symbol, type = 'stock') {
     const keys = await getApiKeys();
     let data;
     try {
-        // Try Polygon
         if (keys.polygon) {
             let url;
-            let from = symbol.split('/')[0];
-            let to = symbol.split('/')[1] || 'USD';
             if (type === 'crypto') {
+                const from = symbol.split('/')[0];
+                const to = symbol.split('/')[1] || 'USD';
                 url = `https://api.polygon.io/v2/last/crypto/${from}/${to}?apiKey=${keys.polygon}`;
                 data = await fetchWithFallback(url);
+                if (!data.last || data.last.price === undefined) throw new Error('Invalid response structure');
                 return data.last.price;
             } else {
                 url = `https://api.polygon.io/v2/last/trade/${symbol}?apiKey=${keys.polygon}`;
                 data = await fetchWithFallback(url);
-                return data.results.p;
+                if (!data.last || data.last.p === undefined) throw new Error('Invalid response structure');
+                return data.last.p;
             }
         }
     } catch {}
     try {
-        // Finnhub
         if (keys.finnhub) {
             const url = `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${keys.finnhub}`;
             data = await fetchWithFallback(url);
+            if (data.c === undefined || data.c === 0) throw new Error('Invalid response structure');
             return data.c;
         }
     } catch {}
     try {
-        // Alpha
         if (keys.alpha) {
             const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${keys.alpha}`;
             data = await fetchWithFallback(url);
+            if (!data['Global Quote'] || !data['Global Quote']['05. price']) throw new Error('Invalid response structure');
             return parseFloat(data['Global Quote']['05. price']);
         }
     } catch {}
-    try {
-        // Yahoo unofficial
-        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`;
-        data = await fetchWithFallback(url);
-        return data.chart.result[0].meta.regularMarketPrice;
-    } catch {}
-    throw new Error('All APIs failed');
+    // Yahoo removed due to CORS issues in browser
+    throw new Error('All APIs failed. Ensure API keys are entered and valid.');
 }
 
 async function getOptionGreeks(optionDetails) {
@@ -75,6 +71,7 @@ async function getOptionGreeks(optionDetails) {
         if (keys.polygon) {
             const url = `https://api.polygon.io/v3/snapshot/options/${optionTicker}?apiKey=${keys.polygon}`;
             const data = await fetchWithFallback(url);
+            if (!data.results || !data.results[0] || !data.results[0].greeks) throw new Error('Invalid response structure');
             return data.results[0].greeks;
         }
     } catch {}
@@ -82,12 +79,13 @@ async function getOptionGreeks(optionDetails) {
         if (keys.finnhub) {
             const url = `https://finnhub.io/api/v1/stock/option-chain?symbol=${symbol}&expiration=${expiration}&token=${keys.finnhub}`;
             const data = await fetchWithFallback(url);
-            const chain = data.data.flatMap(d => d.options[callPut.toUpperCase()]);
+            if (!data.data) throw new Error('Invalid response structure');
+            const chain = data.data.flatMap(d => d.options[callPut.toUpperCase()] || []);
             const contract = chain.find(c => c.strike === strike);
+            if (!contract) throw new Error('No matching contract');
             return { delta: contract.delta, gamma: contract.gamma, theta: contract.theta, vega: contract.vega };
         }
     } catch {}
-    // Fallback to calculate Black-Scholes
     return calculateBlackScholesGreeks(optionDetails);
 }
 
@@ -120,14 +118,13 @@ async function getEtfDividend(symbol) {
         if (keys.finnhub) {
             const url = `https://finnhub.io/api/v1/stock/dividend?symbol=${symbol}&from=${yearAgo}&to=${today}&token=${keys.finnhub}`;
             const data = await fetchWithFallback(url);
-            if (data.length) {
-                const latest = data[data.length - 1];
-                return {
-                    dividend: latest.amount,
-                    payDate: latest.payDate,
-                    yield: latest.yield // if available, else calculate
-                };
-            }
+            if (!data || data.length === 0) throw new Error('No dividend data');
+            const latest = data[data.length - 1];
+            return {
+                dividend: latest.amount,
+                payDate: latest.payDate,
+                yield: latest.yield || 0 // If not present, calculate later
+            };
         }
     } catch {}
     try {
@@ -135,6 +132,7 @@ async function getEtfDividend(symbol) {
             const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&apikey=${keys.alpha}`;
             const data = await fetchWithFallback(url);
             const series = data['Time Series (Daily)'];
+            if (!series) throw new Error('Invalid response structure');
             const dates = Object.keys(series).sort().reverse();
             for (let date of dates) {
                 const divAmount = parseFloat(series[date]['7. dividend amount']);
@@ -142,7 +140,7 @@ async function getEtfDividend(symbol) {
                     return {
                         dividend: divAmount,
                         payDate: date,
-                        yield: 0 // TODO calculate
+                        yield: 0
                     };
                 }
             }
