@@ -2,13 +2,12 @@
 
 function validateTrade(trade) {
     if (!trade.symbol || trade.qty <= 0 || trade.entryPrice <= 0 || !trade.entryDate) {
-        alert('Invalid trade data');
+        alert('Invalid trade data: Symbol, quantity, entry price, and date are required.');
         return false;
     }
-    // Position sizing risk: Alert if qty * entryPrice > 5% of total portfolio (approx)
     const total = getCombinedPl({});
     if (trade.qty * trade.entryPrice > 0.05 * total) {
-        if (!confirm('Position size exceeds 5% risk. Proceed?')) return false;
+        if (!confirm('Position size exceeds 5% of portfolio value. Proceed?')) return false;
     }
     return true;
 }
