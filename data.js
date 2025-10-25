@@ -25,9 +25,18 @@ function calculatePl(trade, currentPrice) {
     const multiplier = trade.type === 'option' ? trade.multiplier : 1;
     const exitPrice = trade.exitPrice || currentPrice;
     if (!exitPrice) return 0;
-    const pl = (exitPrice - trade.entryPrice) * trade.qty * multiplier;
-    if (trade.type === 'etf' && trade.dividendGain) pl += trade.dividendGain;
+    let pl = (exitPrice - trade.entryPrice) * trade.qty * multiplier;
+    if (trade.type === 'etf' && trade.dividendGain && isDividendApplicable(trade)) {
+        pl += trade.dividendGain;
+    }
     return pl;
+}
+
+function isDividendApplicable(trade) {
+    const entry = new Date(trade.entryDate);
+    const exit = trade.exitDate ? new Date(trade.exitDate) : new Date();
+    const pay = new Date(trade.payDate);
+    return entry <= pay && pay <= exit;
 }
 
 function getCombinedPl(currentPrices) {
@@ -43,13 +52,12 @@ function getPlPerBroker(currentPrices) {
     return brokers;
 }
 
-function calculateEquityCurve() {
-    // Sort trades by entry date
+function calculateEquityCurve(currentPrices) {
     const sorted = [...trades].sort((a,b) => new Date(a.entryDate) - new Date(b.entryDate));
     let curve = [];
     let cumulative = 0;
     sorted.forEach(trade => {
-        cumulative += calculatePl(trade, trade.exitPrice || trade.entryPrice); // Approx, use actual current for accuracy
+        cumulative += calculatePl(trade, currentPrices[trade.symbol] || trade.exitPrice || trade.entryPrice);
         curve.push({date: trade.entryDate, value: cumulative});
     });
     return curve;
@@ -58,7 +66,8 @@ function calculateEquityCurve() {
 function calculateSymbolDistribution(currentPrices) {
     const dist = {};
     trades.forEach(trade => {
-        const value = trade.qty * (currentPrices[trade.symbol] || trade.entryPrice);
+        const multiplier = trade.type === 'option' ? trade.multiplier : 1;
+        const value = trade.qty * multiplier * (currentPrices[trade.symbol] || trade.entryPrice);
         dist[trade.symbol] = (dist[trade.symbol] || 0) + value;
     });
     return dist;
@@ -76,11 +85,10 @@ function calculateMaxDrawdown(equityCurve) {
 }
 
 function calculateSharpeRatio(returns) {
-    // returns: array of daily returns
     if (returns.length < 2) return 0;
     const mean = returns.reduce((a,b) => a+b, 0) / returns.length;
     const std = Math.sqrt(returns.map(r => (r - mean)**2).reduce((a,b)=>a+b) / returns.length);
-    return (mean - 0.03 / 252) / (std / Math.sqrt(252)); // Annualized, risk-free 3%
+    return (mean - 0.03 / 252) / (std / Math.sqrt(252));
 }
 
 function getReturns(equityCurve) {
@@ -92,7 +100,7 @@ function getReturns(equityCurve) {
 }
 
 function exportToCsv() {
-    const headers = ['type','symbol','qty','entryPrice','entryDate','exitPrice','exitDate','broker','notes','multiplier','strategy','strike','expiration','callPut'];
+    const headers = ['type','symbol','qty','entryPrice','entryDate','exitPrice','exitDate','broker','notes','multiplier','strategy','strike','expiration','callPut','dividend','payDate','yield','dividendGain'];
     const csv = [headers.join(',')];
     trades.forEach(trade => csv.push(Object.values(trade).join(',')));
     const blob = new Blob([csv.join('\n')], {type: 'text/csv'});
@@ -122,7 +130,11 @@ async function importFromCsv(file) {
             strategy: vals[10],
             strike: parseFloat(vals[11]),
             expiration: vals[12],
-            callPut: vals[13]
+            callPut: vals[13],
+            dividend: parseFloat(vals[14]),
+            payDate: vals[15],
+            yield: parseFloat(vals[16]),
+            dividendGain: parseFloat(vals[17])
         };
     }).filter(t => t.symbol);
     saveTrades();
