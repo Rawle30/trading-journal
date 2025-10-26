@@ -73,6 +73,11 @@ marquee {
     transition: background 0.3s, box-shadow 0.3s;
 }
 
+#addTrade, #tradesList, #summary {
+    max-width: 75%; /* Reduce by 25% assuming original was ~100% */
+    margin: 0 auto;
+}
+
 h2, h3 {
     margin-top: 0;
     color: var(--text-color);
