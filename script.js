@@ -1,4 +1,4 @@
-// script.js - Modular logic for Trading Journal
+// script.js - Modular logic for Trading Journal (Fully Editable Version)
 
 // Constants and Globals
 let trades = JSON.parse(localStorage.getItem('trades')) || [];
@@ -17,13 +17,13 @@ let greeks = {};
 let accountSize = parseFloat(localStorage.getItem('accountSize')) || 100000;
 let plChart;
 
-// API Endpoints (modular)
+// API Endpoints
 const apiEndpoints = {
     price: {
         polygon: (symbol, key) => `https://api.polygon.io/v2/last/quote/${symbol}?apiKey=${key}`,
         finnhub: (symbol, key) => `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${key}`,
         alpha: (symbol, key) => `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${key}`,
-        yahoo: (symbol) => `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d` // No key, unofficial
+        yahoo: (symbol) => `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=1d&interval=1d`
     },
     metric: (symbol, key) => `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${key}`,
     dividends: (symbol, from, to, key) => `https://finnhub.io/api/v1/stock/dividend2?symbol=${symbol}&from=${from}&to=${to}&token=${key}`
@@ -51,8 +51,7 @@ function validateTrade(data) {
 function getUniqueSymbols() {
     return [...new Set(trades.map(t => t.symbol.toUpperCase()))];
 }
-
-// Fetch Functions (robust with fallbacks and error handling)
+// Fetch Functions
 async function fetchWithFallback(urlFn, providersOrder = ['polygon', 'finnhub', 'alpha1', 'alpha2', 'yahoo']) {
     for (let prov of providersOrder) {
         try {
@@ -76,9 +75,9 @@ async function fetchPrice(symbol) {
             if (prov === 'polygon') return apiEndpoints.price.polygon(symbol, apiKeys.polygon);
             if (prov === 'yahoo') return apiEndpoints.price.yahoo(symbol);
         });
-        if (data.last) return data.last.price; // Polygon
-        if (data.c) return data.c; // Finnhub
-        if (data.chart?.result[0]?.meta?.regularMarketPrice) return data.chart.result[0].meta.regularMarketPrice; // Yahoo
+        if (data.last) return data.last.price;
+        if (data.c) return data.c;
+        if (data.chart?.result[0]?.meta?.regularMarketPrice) return data.chart.result[0].meta.regularMarketPrice;
         if (data['Global Quote']) return parseFloat(data['Global Quote']['05. price']);
         throw new Error('Invalid data');
     } catch (err) {
@@ -111,7 +110,7 @@ async function fetchDividends(symbol, from, to) {
     }
 }
 
-// Greeks Calculation (Black-Scholes approximation)
+// Greeks Calculation
 function cumNorm(x) {
     const sign = x < 0 ? -1 : 1;
     x = Math.abs(x) / Math.sqrt(2);
@@ -122,7 +121,7 @@ function cumNorm(x) {
 
 function blackScholes(callPut, S, K, T, r, sigma) {
     if (T <= 0) return { delta: 0, gamma: 0, theta: 0, vega: 0, rho: 0 };
-    if (sigma <= 0) sigma = 0.01; // Avoid division by zero
+    if (sigma <= 0) sigma = 0.01;
     const d1 = (Math.log(S / K) + (r + sigma ** 2 / 2) * T) / (sigma * Math.sqrt(T));
     const d2 = d1 - sigma * Math.sqrt(T);
     const nd1 = cumNorm(d1);
@@ -142,14 +141,20 @@ function blackScholes(callPut, S, K, T, r, sigma) {
     }
     gamma = Math.exp(- (d1 ** 2 / 2)) / (S * sigma * Math.sqrt(2 * Math.PI * T));
     vega = S * Math.sqrt(T) * Math.exp(- (d1 ** 2 / 2)) / Math.sqrt(2 * Math.PI);
-    return { delta: delta.toFixed(4), gamma: gamma.toFixed(4), theta: theta.toFixed(4), vega: vega.toFixed(4), rho: rho.toFixed(4) };
+    return {
+        delta: delta.toFixed(4),
+        gamma: gamma.toFixed(4),
+        theta: theta.toFixed(4),
+        vega: vega.toFixed(4),
+        rho: rho.toFixed(4)
+    };
 }
-
-// Refresh Data
+// Refresh Prices and Metrics
 async function refreshPrices() {
     const symbols = getUniqueSymbols();
     let tickerText = '';
     let totalDiv = 0;
+
     for (let sym of symbols) {
         currentPrices[sym] = await fetchPrice(sym);
         const metric = await fetchMetric(sym);
@@ -159,12 +164,11 @@ async function refreshPrices() {
     }
     document.getElementById('tickerMarquee').innerText = tickerText || 'No symbols';
 
-    // Dividends and Greeks
     for (let trade of trades) {
         if (trade.tradeType === 'etf' && !trade.exitDate) {
             const today = new Date().toISOString().split('T')[0];
             const divs = await fetchDividends(trade.symbol, trade.entryDate, today);
-            divs.sort((a, b) => new Date(b.exDate) - new Date(a.exDate)); // Latest first
+            divs.sort((a, b) => new Date(b.exDate) - new Date(a.exDate));
             dividendGains[trade.id] = divs.reduce((sum, d) => sum + (d.amount || 0) * trade.quantity, 0);
             totalDiv += dividendGains[trade.id];
             if (divs.length > 0) {
@@ -178,7 +182,7 @@ async function refreshPrices() {
                 const exp = new Date(trade.expDate);
                 const T = (exp - now) / (1000 * 60 * 60 * 24 * 365);
                 const sigma = volatilities[trade.symbol];
-                const r = 0.05; // Assume 5%
+                const r = 0.05;
                 greeks[trade.id] = blackScholes(trade.optionType, S, trade.strike, T, r, sigma);
             }
         }
@@ -187,7 +191,7 @@ async function refreshPrices() {
     updateDisplay();
 }
 
-// Calculate P/L
+// P/L and Risk/Reward
 function calculatePL(trade) {
     const multiplier = trade.tradeType === 'option' ? trade.multiplier : 1;
     const exitP = trade.exitPrice || currentPrices[trade.symbol] || trade.entryPrice;
@@ -203,7 +207,45 @@ function calculateRiskReward(trade) {
     return (reward / risk).toFixed(2);
 }
 
-// Update Display
+// Row Renderer
+function renderTradeRow(trade) {
+    const pl = calculatePL(trade);
+    const currentPrice = currentPrices[trade.symbol] != null ? currentPrices[trade.symbol].toFixed(4) : 'N/A';
+    const divYield = trade.tradeType === 'etf' ? (dividendYields[trade.symbol] || 0).toFixed(2) + '%' : 'N/A';
+    const greeksData = trade.tradeType === 'option' ? JSON.stringify(greeks[trade.id] || {}) : 'N/A';
+    const lastDiv = trade.tradeType === 'etf' ? (lastDivPayDates[trade.symbol] || 'N/A') : 'N/A';
+
+    return `
+    <tr>
+        <td>${trade.id}</td>
+        <td><select data-id="${trade.id}" data-field="tradeType">
+            <option value="stock" ${trade.tradeType === 'stock' ? 'selected' : ''}>Stock</option>
+            <option value="etf" ${trade.tradeType === 'etf' ? 'selected' : ''}>ETF</option>
+            <option value="option" ${trade.tradeType === 'option' ? 'selected' : ''}>Option</option>
+        </select></td>
+        <td><input type="text" value="${trade.symbol}" data-id="${trade.id}" data-field="symbol" /></td>
+        <td><input type="number" value="${trade.quantity}" data-id="${trade.id}" data-field="quantity" /></td>
+        <td><input type="number" value="${trade.entryPrice}" data-id="${trade.id}" data-field="entryPrice" /></td>
+        <td><input type="date" value="${trade.entryDate}" data-id="${trade.id}" data-field="entryDate" /></td>
+        <td><input type="number" value="${trade.exitPrice || ''}" data-id="${trade.id}" data-field="exitPrice" /></td>
+        <td><input type="date" value="${trade.exitDate || ''}" data-id="${trade.id}" data-field="exitDate" /></td>
+        <td>${currentPrice}</td>
+        <td class="${pl >= 0 ? 'green' : 'red'}">${pl.toFixed(2)}</td>
+        <td>${trade.tradeType === 'etf' ? (dividendGains[trade.id] || 0).toFixed(2) : 'N/A'}</td>
+        <td>${divYield}</td>
+        <td>${lastDiv}</td>
+        <td>${greeksData}</td>
+        <td>${calculateRiskReward(trade)}</td>
+        <td><input type="text" value="${trade.notes || ''}" data-id="${trade.id}" data-field="notes" /></td>
+        <td><input type="text" value="${trade.broker || ''}" data-id="${trade.id}" data-field="broker" /></td>
+        <td>
+            <button onclick="editTrade(${trade.id})">Edit</button>
+            <button onclick="deleteTrade(${trade.id})">Delete</button>
+        </td>
+    </tr>`;
+}
+
+// Display Renderer
 function updateDisplay() {
     const tbody = document.querySelector('#tradesTable tbody');
     tbody.innerHTML = '';
@@ -218,44 +260,10 @@ function updateDisplay() {
         const pl = calculatePL(trade);
         totalPL += pl;
         brokerPL[trade.broker] = (brokerPL[trade.broker] || 0) + pl;
-
         cumPL += pl;
         chartData.labels.push(trade.symbol);
         chartData.data.push(cumPL);
-
-        const currentPrice = currentPrices[trade.symbol] != null ? currentPrices[trade.symbol].toFixed(4) : 'N/A';
-        const entryPrice = trade.entryPrice.toFixed(4);
-        const exitPrice = trade.exitPrice ? trade.exitPrice.toFixed(4) : '';
-        const stopLoss = trade.stopLoss ? trade.stopLoss.toFixed(4) : '';
-        const target = trade.target ? trade.target.toFixed(4) : '';
-        const quantity = trade.quantity.toFixed(4);
-        const divYield = trade.tradeType === 'etf' ? (dividendYields[trade.symbol] || 0).toFixed(2) + '%' : 'N/A';
-
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${trade.id}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="tradeType">${trade.tradeType}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="symbol">${trade.symbol}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="quantity">${quantity}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="entryPrice">${entryPrice}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="entryDate">${trade.entryDate}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="exitPrice">${exitPrice}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="exitDate">${trade.exitDate || ''}</td>
-            <td>${currentPrice}</td>
-            <td class="${pl >= 0 ? 'green' : 'red'}">${pl.toFixed(2)}</td>
-            <td>${trade.tradeType === 'etf' ? (dividendGains[trade.id] || 0).toFixed(2) : 'N/A'}</td>
-            <td>${divYield}</td>
-            <td>${trade.tradeType === 'etf' ? (lastDivPayDates[trade.symbol] || 'N/A') : 'N/A'}</td>
-            <td>${trade.tradeType === 'option' ? JSON.stringify(greeks[trade.id] || {}) : 'N/A'}</td>
-            <td>${calculateRiskReward(trade)}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="notes">${trade.notes}</td>
-            <td contenteditable="true" data-id="${trade.id}" data-field="broker">${trade.broker}</td>
-            <td>
-                <button onclick="editTrade(${trade.id})">Edit</button>
-                <button onclick="deleteTrade(${trade.id})">Delete</button>
-            </td>
-        `;
-        tbody.appendChild(row);
+        tbody.innerHTML += renderTradeRow(trade);
     }
 
     document.getElementById('totalPL').innerHTML = `<span class="${totalPL >= 0 ? 'green' : 'red'}">${totalPL.toFixed(2)}</span>`;
@@ -268,7 +276,6 @@ function updateDisplay() {
         brokerDiv.appendChild(span);
     }
 
-    // Update Chart
     if (plChart) plChart.destroy();
     plChart = new Chart(document.getElementById('plChart'), {
         type: 'line',
@@ -279,46 +286,32 @@ function updateDisplay() {
         options: { scales: { y: { beginAtZero: true } } }
     });
 }
-
-// Event Listeners
-document.addEventListener('DOMContentLoaded', async () => {
-    document.getElementById('accountSize').value = accountSize;
-    if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
-    await refreshPrices();
-    updateDisplay();
-
-    // Delegation for inline edit
-    document.getElementById('tradesTable').addEventListener('blur', function(e) {
-        if (e.target.contentEditable === 'true') {
-            const id = parseInt(e.target.dataset.id);
-            const field = e.target.dataset.field;
-            let value = e.target.innerText.trim();
-            const trade = trades.find(t => t.id === id);
-            if (trade) {
-                if (['quantity', 'entryPrice', 'exitPrice', 'stopLoss', 'target', 'strike', 'multiplier'].includes(field)) {
-                    value = parseFloat(value) || trade[field] || 0;
-                } else if (['entryDate', 'exitDate', 'expDate'].includes(field)) {
-                    // Validate date if necessary
-                } else if (field === 'optionType') {
-                    if (!['call', 'put'].includes(value)) value = trade[field];
-                } else if (field === 'strategy') {
-                    // Handle strategy edit
-                }
-                trade[field] = value;
-                saveData();
-                refreshPrices(); // Refresh calculations and display
-            }
+// Inline Edit Listener
+document.getElementById('tradesTable').addEventListener('input', (e) => {
+    const field = e.target.dataset.field;
+    const id = parseInt(e.target.dataset.id);
+    let value = e.target.value;
+    const trade = trades.find(t => t.id === id);
+    if (trade) {
+        if (['quantity', 'entryPrice', 'exitPrice', 'stopLoss', 'target', 'strike', 'multiplier'].includes(field)) {
+            value = parseFloat(value) || 0;
         }
-    }, true);
+        trade[field] = value;
+        saveData();
+        refreshPrices();
+    }
 });
 
+// Dark Mode Toggle
 document.getElementById('darkModeToggle').addEventListener('click', () => {
     document.body.classList.toggle('dark-mode');
     localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
 });
 
+// Refresh Prices Button
 document.getElementById('refreshPrices').addEventListener('click', refreshPrices);
 
+// Save API Key
 document.getElementById('saveApiKey').addEventListener('click', () => {
     const prov = document.getElementById('apiProvider').value;
     const key = document.getElementById('apiKeyInput').value;
@@ -327,19 +320,23 @@ document.getElementById('saveApiKey').addEventListener('click', () => {
     alert('API Key saved');
 });
 
+// Save Account Size
 document.getElementById('saveAccountSize').addEventListener('click', () => {
     accountSize = parseFloat(document.getElementById('accountSize').value) || 100000;
     localStorage.setItem('accountSize', accountSize);
 });
 
+// Trade Type Toggle
 document.getElementById('tradeType').addEventListener('change', (e) => {
     document.getElementById('optionFields').style.display = e.target.value === 'option' ? 'block' : 'none';
 });
 
+// Strategy Toggle
 document.getElementById('strategy').addEventListener('change', (e) => {
     document.getElementById('customStrategy').style.display = e.target.value === 'Custom' ? 'block' : 'none';
 });
 
+// Trade Form Submission
 document.getElementById('tradeForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const data = {
@@ -388,6 +385,7 @@ document.getElementById('tradeForm').addEventListener('submit', (e) => {
     refreshPrices();
 });
 
+// CSV Export
 document.getElementById('exportCSV').addEventListener('click', () => {
     const csv = Papa.unparse(trades);
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -398,6 +396,7 @@ document.getElementById('exportCSV').addEventListener('click', () => {
     a.click();
 });
 
+// CSV Import
 document.getElementById('importCSV').addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -423,6 +422,7 @@ document.getElementById('importCSV').addEventListener('change', (e) => {
     }
 });
 
+// Edit Trade
 function editTrade(id) {
     const trade = trades.find(t => t.id === id);
     if (trade) {
@@ -460,9 +460,12 @@ function editTrade(id) {
     }
 }
 
+// Delete Trade
 function deleteTrade(id) {
     trades = trades.filter(t => t.id !== id);
     saveData();
     updateDisplay();
 }
+
+
 
