@@ -234,13 +234,13 @@ function updateDisplay() {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${trade.id}</td>
-            <td>${trade.tradeType}</td>
-            <td>${trade.symbol}</td>
-            <td>${quantity}</td>
-            <td>${entryPrice}</td>
-            <td>${trade.entryDate}</td>
-            <td>${exitPrice}</td>
-            <td>${trade.exitDate || ''}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="tradeType">${trade.tradeType}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="symbol">${trade.symbol}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="quantity">${quantity}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="entryPrice">${entryPrice}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="entryDate">${trade.entryDate}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="exitPrice">${exitPrice}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="exitDate">${trade.exitDate || ''}</td>
             <td>${currentPrice}</td>
             <td class="${pl >= 0 ? 'green' : 'red'}">${pl.toFixed(2)}</td>
             <td>${trade.tradeType === 'etf' ? (dividendGains[trade.id] || 0).toFixed(2) : 'N/A'}</td>
@@ -248,8 +248,8 @@ function updateDisplay() {
             <td>${trade.tradeType === 'etf' ? (lastDivPayDates[trade.symbol] || 'N/A') : 'N/A'}</td>
             <td>${trade.tradeType === 'option' ? JSON.stringify(greeks[trade.id] || {}) : 'N/A'}</td>
             <td>${calculateRiskReward(trade)}</td>
-            <td>${trade.notes}</td>
-            <td>${trade.broker}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="notes">${trade.notes}</td>
+            <td contenteditable="true" data-id="${trade.id}" data-field="broker">${trade.broker}</td>
             <td>
                 <button onclick="editTrade(${trade.id})">Edit</button>
                 <button onclick="deleteTrade(${trade.id})">Delete</button>
@@ -286,6 +286,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
     await refreshPrices();
     updateDisplay();
+
+    // Delegation for inline edit
+    document.getElementById('tradesTable').addEventListener('blur', function(e) {
+        if (e.target.contentEditable === 'true') {
+            const id = parseInt(e.target.dataset.id);
+            const field = e.target.dataset.field;
+            let value = e.target.innerText.trim();
+            const trade = trades.find(t => t.id === id);
+            if (trade) {
+                if (['quantity', 'entryPrice', 'exitPrice', 'stopLoss', 'target'].includes(field)) {
+                    value = parseFloat(value) || 0;
+                }
+                trade[field] = value;
+                saveData();
+                refreshPrices(); // Refresh calculations and display
+            }
+        }
+    }, true);
 });
 
 document.getElementById('darkModeToggle').addEventListener('click', () => {
