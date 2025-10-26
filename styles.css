@@ -7,6 +7,8 @@
     --border-color: #ddd;
     --shadow-color: rgba(0, 0, 0, 0.1);
     --hover-background: #f1f1f1;
+    --scrollbar-thumb: #007bff;
+    --scrollbar-track: #ddd;
 }
 
 .dark-mode {
@@ -18,6 +20,8 @@
     --border-color: #555;
     --shadow-color: rgba(0, 0, 0, 0.5);
     --hover-background: #444;
+    --scrollbar-thumb: #4da3ff;
+    --scrollbar-track: #555;
 }
 
 body {
@@ -130,7 +134,7 @@ button {
     max-height: 400px; /* Set max height for vertical scroll */
     margin: 0 auto; /* Center it */
     scrollbar-width: auto; /* For Firefox, make thicker */
-    scrollbar-color: var(--primary-color) var(--border-color); /* For Firefox */
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); /* For Firefox */
 }
 
 .table-container::-webkit-scrollbar {
@@ -139,12 +143,16 @@ button {
 }
 
 .table-container::-webkit-scrollbar-thumb {
-    background: var(--primary-color);
+    background: var(--scrollbar-thumb);
     border-radius: 6px;
 }
 
 .table-container::-webkit-scrollbar-track {
-    background: var(--border-color);
+    background: var(--scrollbar-track);
+}
+
+.table-container::-webkit-scrollbar-corner {
+    background: var(--scrollbar-track);
 }
 
 table {
