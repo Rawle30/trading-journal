@@ -465,3 +465,4 @@ function deleteTrade(id) {
     saveData();
     updateDisplay();
 }
+,,,
