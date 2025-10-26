@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trading Journal</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
 </head>
@@ -13,21 +14,24 @@
         <div class="ticker">
             <marquee id="tickerMarquee">Loading ticker...</marquee>
         </div>
-        <button id="darkModeToggle">Toggle Dark Mode</button>
-        <button id="refreshPrices">Refresh Prices</button>
-        <select id="apiProvider">
-            <option value="alpha1">Alpha Vantage 1</option>
-            <option value="alpha2">Alpha Vantage 2</option>
-            <option value="finnhub">Finnhub</option>
-            <option value="polygon">Polygon</option>
-        </select>
-        <input type="text" id="apiKeyInput" placeholder="Enter API Key">
-        <button id="saveApiKey">Save API Key</button>
-        <input type="number" id="accountSize" placeholder="Account Size for Risk Calc" value="100000">
-        <button id="saveAccountSize">Save Account Size</button>
+        <div class="header-controls">
+            <button id="darkModeToggle">Toggle Dark Mode</button>
+            <button id="refreshPrices">Refresh Prices</button>
+            <select id="apiProvider">
+                <option value="alpha1">Alpha Vantage 1</option>
+                <option value="alpha2">Alpha Vantage 2</option>
+                <option value="finnhub">Finnhub</option>
+                <option value="polygon">Polygon</option>
+            </select>
+            <input type="text" id="apiKeyInput" placeholder="Enter API Key">
+            <button id="saveApiKey">Save API Key</button>
+            <input type="number" id="accountSize" placeholder="Account Size for Risk Calc" value="100000">
+            <button id="saveAccountSize">Save Account Size</button>
+        </div>
     </header>
 
-    <section id="addTrade">
+    <section id="addTrade" class="card">
+        <h2>Add/Update Trade</h2>
         <form id="tradeForm">
             <input type="hidden" id="editId">
             <select id="tradeType">
@@ -81,12 +85,13 @@
                 </select>
                 <input type="text" id="customStrategy" placeholder="Custom Strategy" style="display:none;">
             </div>
-            <button type="submit">Add/Update Trade</button>
+            <button type="submit" class="primary-btn">Add/Update Trade</button>
         </form>
     </section>
 
-    <section id="tradesList">
-        <div style="overflow-x: auto;">
+    <section id="tradesList" class="card">
+        <h2>Trades List</h2>
+        <div class="table-container">
             <table id="tradesTable">
                 <thead>
                     <tr>
@@ -115,18 +120,28 @@
         </div>
     </section>
 
-    <section id="summary">
-        <h2>Combined Profit/Loss: <span id="totalPL"></span></h2>
-        <h2>Total Dividend Gains: <span id="totalDividends"></span></h2>
-        <h2>Profit/Loss per Broker</h2>
-        <div id="brokerPL"></div>
-        <h2>Portfolio Graphs</h2>
-        <canvas id="plChart" width="400" height="200"></canvas>
+    <section id="summary" class="card">
+        <h2>Summary</h2>
+        <div class="summary-items">
+            <div class="summary-item">
+                <h3>Combined Profit/Loss:</h3>
+                <span id="totalPL"></span>
+            </div>
+            <div class="summary-item">
+                <h3>Total Dividend Gains:</h3>
+                <span id="totalDividends"></span>
+            </div>
+        </div>
+        <h3>Profit/Loss per Broker</h3>
+        <div id="brokerPL" class="broker-pl"></div>
+        <h3>Portfolio Graphs</h3>
+        <canvas id="plChart" width="300" height="150"></canvas>
     </section>
 
-    <section id="importExport">
+    <section id="importExport" class="card">
+        <h2>Import/Export</h2>
         <input type="file" id="importCSV" accept=".csv">
-        <button id="exportCSV">Export CSV</button>
+        <button id="exportCSV" class="primary-btn">Export CSV</button>
     </section>
 
     <script src="script.js"></script>
