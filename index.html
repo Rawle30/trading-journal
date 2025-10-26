@@ -38,20 +38,20 @@
             </select>
             <input type="text" id="symbol" placeholder="Symbol">
             <input type="number" id="quantity" placeholder="Quantity" step="0.0001">
-            <input type="number" id="entryPrice" placeholder="Entry Price">
+            <input type="number" id="entryPrice" placeholder="Entry Price" step="0.0001">
             <input type="date" id="entryDate">
-            <input type="number" id="exitPrice" placeholder="Exit Price">
+            <input type="number" id="exitPrice" placeholder="Exit Price" step="0.0001">
             <input type="date" id="exitDate">
             <input type="text" id="broker" placeholder="Broker">
-            <input type="number" id="stopLoss" placeholder="Stop Loss">
-            <input type="number" id="target" placeholder="Target">
+            <input type="number" id="stopLoss" placeholder="Stop Loss" step="0.0001">
+            <input type="number" id="target" placeholder="Target" step="0.0001">
             <textarea id="notes" placeholder="Notes"></textarea>
             <div id="optionFields" style="display:none;">
                 <select id="optionType">
                     <option value="call">Call</option>
                     <option value="put">Put</option>
                 </select>
-                <input type="number" id="strike" placeholder="Strike">
+                <input type="number" id="strike" placeholder="Strike" step="0.0001">
                 <input type="date" id="expDate">
                 <input type="number" id="multiplier" placeholder="Multiplier" value="100">
                 <select id="strategy">
