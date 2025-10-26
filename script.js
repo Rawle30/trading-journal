@@ -295,8 +295,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             let value = e.target.innerText.trim();
             const trade = trades.find(t => t.id === id);
             if (trade) {
-                if (['quantity', 'entryPrice', 'exitPrice', 'stopLoss', 'target'].includes(field)) {
-                    value = parseFloat(value) || 0;
+                if (['quantity', 'entryPrice', 'exitPrice', 'stopLoss', 'target', 'strike', 'multiplier'].includes(field)) {
+                    value = parseFloat(value) || trade[field] || 0;
+                } else if (['entryDate', 'exitDate', 'expDate'].includes(field)) {
+                    // Validate date if necessary
+                } else if (field === 'optionType') {
+                    if (!['call', 'put'].includes(value)) value = trade[field];
+                } else if (field === 'strategy') {
+                    // Handle strategy edit
                 }
                 trade[field] = value;
                 saveData();
