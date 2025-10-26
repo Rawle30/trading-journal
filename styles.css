@@ -121,18 +121,22 @@ button {
     overflow-x: auto;
     border-radius: 8px;
     overflow: hidden;
+    max-width: 80%; /* Reduce width */
+    margin: 0 auto; /* Center it */
 }
 
 table {
     border-collapse: collapse;
-    width: 100%;
+    width: max-content; /* Allow table to be as wide as content */
+    font-size: 14px;
 }
 
 th, td {
     border: 1px solid var(--border-color);
-    padding: 12px;
+    padding: 8px;
     text-align: left;
     transition: background 0.3s;
+    white-space: nowrap; /* Prevent wrapping */
 }
 
 th {
