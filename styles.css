@@ -123,17 +123,19 @@ button {
 }
 
 .table-container {
-    overflow-x: auto;
+    overflow: auto; /* Enable both x and y scroll */
     border-radius: 8px;
     overflow: hidden;
     max-width: 60%; /* Reduce width even more */
+    max-height: 400px; /* Set max height for vertical scroll */
     margin: 0 auto; /* Center it */
     scrollbar-width: thin; /* For Firefox */
     scrollbar-color: var(--primary-color) var(--border-color); /* For Firefox */
 }
 
 .table-container::-webkit-scrollbar {
-    height: 8px; /* For Chrome/Safari */
+    width: 8px; /* Vertical scrollbar width */
+    height: 8px; /* Horizontal scrollbar height */
 }
 
 .table-container::-webkit-scrollbar-thumb {
@@ -162,6 +164,9 @@ th, td {
 th {
     background: linear-gradient(135deg, #f8f9fa, #e9ecef);
     font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 1;
 }
 
 .dark-mode th {
