@@ -121,8 +121,23 @@ button {
     overflow-x: auto;
     border-radius: 8px;
     overflow: hidden;
-    max-width: 80%; /* Reduce width */
+    max-width: 60%; /* Reduce width even more */
     margin: 0 auto; /* Center it */
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: var(--primary-color) var(--border-color); /* For Firefox */
+}
+
+.table-container::-webkit-scrollbar {
+    height: 8px; /* For Chrome/Safari */
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--border-color);
 }
 
 table {
