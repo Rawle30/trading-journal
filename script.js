@@ -82,7 +82,7 @@ async function fetchPrice(symbol) {
         if (data['Global Quote']) return parseFloat(data['Global Quote']['05. price']);
         throw new Error('Invalid data');
     } catch (err) {
-        alert(`Failed to fetch price for ${symbol}: ${err}`);
+        console.error(`Failed to fetch price for ${symbol}: ${err}`);
         return null;
     }
 }
@@ -122,6 +122,7 @@ function cumNorm(x) {
 
 function blackScholes(callPut, S, K, T, r, sigma) {
     if (T <= 0) return { delta: 0, gamma: 0, theta: 0, vega: 0, rho: 0 };
+    if (sigma <= 0) sigma = 0.01; // Avoid division by zero
     const d1 = (Math.log(S / K) + (r + sigma ** 2 / 2) * T) / (sigma * Math.sqrt(T));
     const d2 = d1 - sigma * Math.sqrt(T);
     const nd1 = cumNorm(d1);
@@ -152,7 +153,7 @@ async function refreshPrices() {
     for (let sym of symbols) {
         currentPrices[sym] = await fetchPrice(sym);
         const metric = await fetchMetric(sym);
-        volatilities[sym] = metric['52WkHighAnnual'] - metric['52WkLowAnnual'] || 0.2; // Better volatility proxy
+        volatilities[sym] = (metric['52WeekHigh'] - metric['52WeekLow']) / ((metric['52WeekHigh'] + metric['52WeekLow']) / 2) || 0.2;
         dividendYields[sym] = metric.dividendYield || 0;
         tickerText += `${sym}: $${currentPrices[sym] || 'N/A'} Yield: ${dividendYields[sym].toFixed(2)}%   `;
     }
@@ -222,20 +223,28 @@ function updateDisplay() {
         chartData.labels.push(trade.symbol);
         chartData.data.push(cumPL);
 
+        const currentPrice = currentPrices[trade.symbol] != null ? currentPrices[trade.symbol].toFixed(4) : 'N/A';
+        const entryPrice = trade.entryPrice.toFixed(4);
+        const exitPrice = trade.exitPrice ? trade.exitPrice.toFixed(4) : '';
+        const stopLoss = trade.stopLoss ? trade.stopLoss.toFixed(4) : '';
+        const target = trade.target ? trade.target.toFixed(4) : '';
+        const quantity = trade.quantity.toFixed(4);
+        const divYield = trade.tradeType === 'etf' ? (dividendYields[trade.symbol] || 0).toFixed(2) + '%' : 'N/A';
+
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${trade.id}</td>
             <td>${trade.tradeType}</td>
             <td>${trade.symbol}</td>
-            <td>${trade.quantity}</td>
-            <td>${trade.entryPrice}</td>
+            <td>${quantity}</td>
+            <td>${entryPrice}</td>
             <td>${trade.entryDate}</td>
-            <td>${trade.exitPrice || ''}</td>
+            <td>${exitPrice}</td>
             <td>${trade.exitDate || ''}</td>
-            <td>${currentPrices[trade.symbol] || 'N/A'}</td>
+            <td>${currentPrice}</td>
             <td class="${pl >= 0 ? 'green' : 'red'}">${pl.toFixed(2)}</td>
             <td>${trade.tradeType === 'etf' ? (dividendGains[trade.id] || 0).toFixed(2) : 'N/A'}</td>
-            <td>${trade.tradeType === 'etf' ? (dividendYields[trade.symbol] || 'N/A') : 'N/A'}</td>
+            <td>${divYield}</td>
             <td>${trade.tradeType === 'etf' ? (lastDivPayDates[trade.symbol] || 'N/A') : 'N/A'}</td>
             <td>${trade.tradeType === 'option' ? JSON.stringify(greeks[trade.id] || {}) : 'N/A'}</td>
             <td>${calculateRiskReward(trade)}</td>
@@ -272,11 +281,11 @@ function updateDisplay() {
 }
 
 // Event Listeners
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('accountSize').value = accountSize;
     if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+    await refreshPrices();
     updateDisplay();
-    refreshPrices();
 });
 
 document.getElementById('darkModeToggle').addEventListener('click', () => {
@@ -412,13 +421,17 @@ function editTrade(id) {
             document.getElementById('expDate').value = trade.expDate;
             document.getElementById('multiplier').value = trade.multiplier;
             const strategySelect = document.getElementById('strategy');
-            if (strategySelect.options.namedItem(trade.strategy)) {
+            const isStandard = Array.from(strategySelect.options).some(opt => opt.value === trade.strategy);
+            if (isStandard) {
                 strategySelect.value = trade.strategy;
+                document.getElementById('customStrategy').style.display = 'none';
             } else {
                 strategySelect.value = 'Custom';
                 document.getElementById('customStrategy').value = trade.strategy;
                 document.getElementById('customStrategy').style.display = 'block';
             }
+        } else {
+            document.getElementById('optionFields').style.display = 'none';
         }
     }
 }
