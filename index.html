@@ -32,7 +32,7 @@
             <button id="save-api-key">Save API Key</button>
         </section>
         <section id="trade-entry">
-            <h2>Add Trade</h2>
+            <h2>Add/Edit Trade</h2>
             <form id="trade-form">
                 <input type="text" id="symbol" placeholder="Symbol" required>
                 <select id="asset-type">
@@ -64,7 +64,7 @@
                 <!-- Risk Management -->
                 <input type="number" id="stop-loss" placeholder="Stop Loss" step="0.01">
                 <input type="number" id="take-profit" placeholder="Take Profit" step="0.01">
-                <button type="submit">Add Trade</button>
+                <button type="submit" id="submit-button">Add Trade</button>
             </form>
             <button id="import-csv">Import CSV</button>
             <input type="file" id="csv-file" accept=".csv" style="display:none;">
