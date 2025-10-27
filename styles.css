@@ -95,7 +95,6 @@ input, select, textarea {
 canvas {
     margin-top: 20px;
 }
-/* Existing styles remain the same */
 
 /* New flex container for side-by-side layout */
 .entry-summary-flex {
