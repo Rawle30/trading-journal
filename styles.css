@@ -95,3 +95,29 @@ input, select, textarea {
 canvas {
     margin-top: 20px;
 }
+/* Existing styles remain the same */
+
+/* New flex container for side-by-side layout */
+.entry-summary-flex {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+#trade-entry, #broker-summary {
+    flex: 1;
+    min-width: 300px; /* Ensures they don't get too narrow */
+}
+
+#broker-summary {
+    background-color: #fff; /* For visibility */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.dark-mode #broker-summary {
+    background-color: #444;
+    border: 1px solid #555;
+}
