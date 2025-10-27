@@ -10,6 +10,7 @@ let apiKeys = {
 };
 let selectedApi = 'alpha_vantage';
 const apiOrder = ['alpha_vantage', 'finnhub', 'polygon', 'yahoo']; // For fallback
+let editingIndex = -1;
 
 document.addEventListener('DOMContentLoaded', () => {
     loadTrades();
@@ -23,7 +24,7 @@ function setupEventListeners() {
     document.getElementById('dark-mode-toggle').addEventListener('click', toggleDarkMode);
     document.getElementById('refresh-prices').addEventListener('click', refreshPrices);
     document.getElementById('save-api-key').addEventListener('click', saveApiKey);
-    document.getElementById('trade-form').addEventListener('submit', addTrade);
+    document.getElementById('trade-form').addEventListener('submit', handleTradeSubmit);
     document.getElementById('import-csv').addEventListener('click', () => document.getElementById('csv-file').click());
     document.getElementById('csv-file').addEventListener('change', importCSV);
     document.getElementById('export-csv').addEventListener('click', exportCSV);
@@ -60,7 +61,7 @@ function saveApiKey() {
     alert('API Key saved');
 }
 
-function addTrade(e) {
+function handleTradeSubmit(e) {
     e.preventDefault();
     const symbol = document.getElementById('symbol').value.toUpperCase();
     const assetType = document.getElementById('asset-type').value;
@@ -94,11 +95,22 @@ function addTrade(e) {
     const risk = (entryPrice - stopLoss) * quantity * trade.multiplier / accountSize;
     if (risk > 0.02) alert('Warning: Risk exceeds 2% of account');
 
-    trades.push(trade);
+    if (editingIndex !== -1) {
+        trades[editingIndex] = trade;
+        editingIndex = -1;
+        document.getElementById('submit-button').textContent = 'Add Trade';
+    } else {
+        trades.push(trade);
+    }
     saveTrades();
     updateTable();
     updateSummary();
-    e.target.reset();
+    resetForm();
+}
+
+function resetForm() {
+    document.getElementById('trade-form').reset();
+    toggleOptionsFields();
 }
 
 function validateInputs(inputs) {
@@ -139,21 +151,21 @@ function updateTable() {
         }
         const row = `
             <tr>
-                <td contenteditable="true" onblur="editTrade(${index}, 'symbol', this.innerText)">${trade.symbol}</td>
+                <td>${trade.symbol}</td>
                 <td>${trade.assetType}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'quantity', this.innerText)">${trade.quantity}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'multiplier', this.innerText)">${trade.multiplier}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'entryPrice', this.innerText)">${trade.entryPrice}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'entryDate', this.innerText)">${trade.entryDate}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'exitPrice', this.innerText)">${trade.exitPrice || ''}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'exitDate', this.innerText)">${trade.exitDate || ''}</td>
+                <td>${trade.quantity}</td>
+                <td>${trade.multiplier}</td>
+                <td>${trade.entryPrice}</td>
+                <td>${trade.entryDate}</td>
+                <td>${trade.exitPrice || ''}</td>
+                <td>${trade.exitDate || ''}</td>
                 <td>${trade.currentPrice || 'N/A'}</td>
                 <td class="${pl > 0 ? 'green' : pl < 0 ? 'red' : ''}">${pl.toFixed(2)}</td>
                 <td class="${trade.dividendGain > 0 ? 'green' : 'red'}">${(trade.dividendGain || 0).toFixed(2)}</td>
                 <td class="${colorClass}">${combined.toFixed(2)}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'broker', this.innerText)">${trade.broker || ''}</td>
-                <td contenteditable="true" onblur="editTrade(${index}, 'notes', this.innerText)">${trade.notes || ''}</td>
-                <td><button onclick="deleteTrade(${index})">Delete</button></td>
+                <td>${trade.broker || ''}</td>
+                <td>${trade.notes || ''}</td>
+                <td><button onclick="editTradeForm(${index})">Edit</button><button onclick="deleteTrade(${index})">Delete</button></td>
                 <td>${greeksHtml}</td>
                 <td>${dividendsHtml}</td>
             </tr>
@@ -162,20 +174,32 @@ function updateTable() {
     });
 }
 
-function editTrade(index, field, value) {
-    if (['quantity', 'multiplier', 'entryPrice', 'exitPrice', 'stopLoss', 'takeProfit', 'strike', 'volatility', 'riskFreeRate'].includes(field)) {
-        value = parseFloat(value);
+function editTradeForm(index) {
+    const trade = trades[index];
+    document.getElementById('symbol').value = trade.symbol;
+    document.getElementById('asset-type').value = trade.assetType;
+    document.getElementById('quantity').value = trade.quantity;
+    document.getElementById('multiplier').value = trade.multiplier;
+    document.getElementById('entry-price').value = trade.entryPrice;
+    document.getElementById('entry-date').value = trade.entryDate;
+    document.getElementById('exit-price').value = trade.exitPrice || '';
+    document.getElementById('exit-date').value = trade.exitDate || '';
+    document.getElementById('broker').value = trade.broker || '';
+    document.getElementById('notes').value = trade.notes || '';
+    document.getElementById('stop-loss').value = trade.stopLoss || '';
+    document.getElementById('take-profit').value = trade.takeProfit || '';
+
+    if (trade.assetType === 'options') {
+        document.getElementById('strike').value = trade.strike || '';
+        document.getElementById('expiration').value = trade.expiration || '';
+        document.getElementById('option-type').value = trade.optionType || 'call';
+        document.getElementById('volatility').value = trade.volatility || '';
+        document.getElementById('risk-free-rate').value = trade.riskFreeRate || '';
     }
-    trades[index][field] = value;
-    if (trades[index].assetType === 'options') {
-        trades[index].greeks = calculateGreeks(trades[index]);
-    }
-    if (trades[index].assetType === 'etf' && trades[index].dividends) {
-        trades[index].dividendGain = trades[index].dividends.dividend * trades[index].quantity;
-    }
-    saveTrades();
-    updateTable();
-    updateSummary();
+
+    toggleOptionsFields();
+    editingIndex = index;
+    document.getElementById('submit-button').textContent = 'Update Trade';
 }
 
 function deleteTrade(index) {
@@ -360,6 +384,3 @@ async function updateTicker() {
         } catch {}
     }
 }
-
-
-
