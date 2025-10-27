@@ -31,45 +31,54 @@
             </select>
             <button id="save-api-key">Save API Key</button>
         </section>
-        <section id="trade-entry">
-            <h2>Add/Edit Trade</h2>
-            <form id="trade-form">
-                <input type="text" id="symbol" placeholder="Symbol" required>
-                <select id="asset-type">
-                    <option value="stock">Stock</option>
-                    <option value="crypto">Crypto</option>
-                    <option value="etf">ETF</option>
-                    <option value="options">Options</option>
-                    <option value="fractional">Fractional Shares</option>
-                </select>
-                <input type="number" id="quantity" placeholder="Quantity" step="0.0001" required>
-                <input type="number" id="multiplier" placeholder="Multiplier (for options)" step="1" value="1">
-                <input type="number" id="entry-price" placeholder="Entry Price" step="0.01" required>
-                <input type="date" id="entry-date" required>
-                <input type="number" id="exit-price" placeholder="Exit Price" step="0.01">
-                <input type="date" id="exit-date">
-                <input type="text" id="broker" placeholder="Broker">
-                <textarea id="notes" placeholder="Notes"></textarea>
-                <!-- For Options -->
-                <div id="options-fields" style="display:none;">
-                    <input type="number" id="strike" placeholder="Strike Price" step="0.01">
-                    <input type="date" id="expiration" placeholder="Expiration Date">
-                    <select id="option-type">
-                        <option value="call">Call</option>
-                        <option value="put">Put</option>
+        <!-- New flex container for side-by-side layout -->
+        <div class="entry-summary-flex">
+            <section id="trade-entry">
+                <h2>Add/Edit Trade</h2>
+                <form id="trade-form">
+                    <input type="text" id="symbol" placeholder="Symbol" required>
+                    <select id="asset-type">
+                        <option value="stock">Stock</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="etf">ETF</option>
+                        <option value="options">Options</option>
+                        <option value="fractional">Fractional Shares</option>
                     </select>
-                    <input type="number" id="volatility" placeholder="Implied Volatility" step="0.01">
-                    <input type="number" id="risk-free-rate" placeholder="Risk Free Rate" step="0.01">
-                </div>
-                <!-- Risk Management -->
-                <input type="number" id="stop-loss" placeholder="Stop Loss" step="0.01">
-                <input type="number" id="take-profit" placeholder="Take Profit" step="0.01">
-                <button type="submit" id="submit-button">Add Trade</button>
-            </form>
-            <button id="import-csv">Import CSV</button>
-            <input type="file" id="csv-file" accept=".csv" style="display:none;">
-            <button id="export-csv">Export CSV</button>
-        </section>
+                    <input type="number" id="quantity" placeholder="Quantity" step="0.0001" required>
+                    <input type="number" id="multiplier" placeholder="Multiplier (for options)" step="1" value="1">
+                    <input type="number" id="entry-price" placeholder="Entry Price" step="0.01" required>
+                    <input type="date" id="entry-date" required>
+                    <input type="number" id="exit-price" placeholder="Exit Price" step="0.01">
+                    <input type="date" id="exit-date">
+                    <input type="text" id="broker" placeholder="Broker">
+                    <textarea id="notes" placeholder="Notes"></textarea>
+                    <!-- For Options -->
+                    <div id="options-fields" style="display:none;">
+                        <input type="number" id="strike" placeholder="Strike Price" step="0.01">
+                        <input type="date" id="expiration" placeholder="Expiration Date">
+                        <select id="option-type">
+                            <option value="call">Call</option>
+                            <option value="put">Put</option>
+                        </select>
+                        <input type="number" id="volatility" placeholder="Implied Volatility" step="0.01">
+                        <input type="number" id="risk-free-rate" placeholder="Risk Free Rate" step="0.01">
+                    </div>
+                    <!-- Risk Management -->
+                    <input type="number" id="stop-loss" placeholder="Stop Loss" step="0.01">
+                    <input type="number" id="take-profit" placeholder="Take Profit" step="0.01">
+                    <button type="submit" id="submit-button">Add Trade</button>
+                </form>
+                <button id="import-csv">Import CSV</button>
+                <input type="file" id="csv-file" accept=".csv" style="display:none;">
+                <button id="export-csv">Export CSV</button>
+            </section>
+            <section id="broker-summary">
+                <h2>Broker Summary</h2>
+                <h3>Profit/Loss by Broker</h3>
+                <ul id="broker-pl"></ul>
+                <canvas id="pl-chart" width="400" height="200"></canvas>
+            </section>
+        </div>
         <section id="trades-list">
             <h2>Trades</h2>
             <div class="table-container">
@@ -100,11 +109,8 @@
             </div>
         </section>
         <section id="summary">
-            <h2>Summary</h2>
+            <h2>Overall Summary</h2>
             <p>Total Combined Profit/Loss: <span id="total-pl"></span></p>
-            <h3>Profit/Loss by Broker</h3>
-            <ul id="broker-pl"></ul>
-            <canvas id="pl-chart" width="400" height="200"></canvas>
             <canvas id="asset-chart" width="400" height="200"></canvas>
         </section>
     </div>
