@@ -28,7 +28,7 @@ function setupEventListeners() {
     document.getElementById('import-csv').addEventListener('click', () => document.getElementById('csv-file').click());
     document.getElementById('csv-file').addEventListener('change', importCSV);
     document.getElementById('export-csv').addEventListener('click', exportCSV);
-    document.getElementById('asset-type').addEventListener('change', toggleOptionsFields);
+    document.getElementById('asset-type').addEventListener('change', toggleAssetFields);
 }
 
 function toggleDarkMode() {
@@ -40,8 +40,12 @@ async function refreshPrices() {
         try {
             trade.currentPrice = await getCurrentPriceWithFallback(trade.symbol, trade.assetType);
             if (trade.assetType === 'etf') {
-                trade.dividends = await getDividends(trade.symbol);
-                trade.dividendGain = (trade.dividends?.dividend || 0) * trade.quantity;
+                if (!trade.manualDividend) {
+                    trade.dividends = await getDividends(trade.symbol);
+                }
+                const dividend = trade.manualDividend || trade.dividends?.dividend || 0;
+                trade.dividendGain = dividend * trade.quantity;
+                trade.payDate = trade.manualExDivDate || trade.dividends?.payDate || 'N/A';
             }
         } catch (error) {
             console.error('Error refreshing price:', error);
@@ -90,6 +94,13 @@ function handleTradeSubmit(e) {
         trade.multiplier = multiplier || 100; // Default for options
     }
 
+    if (assetType === 'etf') {
+        trade.manualExDivDate = document.getElementById('ex-div-date').value;
+        trade.manualDividend = parseFloat(document.getElementById('dividend-per-share').value || 0);
+        trade.payDate = trade.manualExDivDate || '';
+        trade.dividendGain = trade.manualDividend * quantity;
+    }
+
     // Risk management example: Alert if potential loss > 2% assuming account size 100k
     const accountSize = 100000; // Placeholder
     const risk = (entryPrice - stopLoss) * quantity * trade.multiplier / accountSize;
@@ -110,7 +121,7 @@ function handleTradeSubmit(e) {
 
 function resetForm() {
     document.getElementById('trade-form').reset();
-    toggleOptionsFields();
+    toggleAssetFields();
 }
 
 function validateInputs(inputs) {
@@ -126,9 +137,10 @@ function validateInputs(inputs) {
     return true;
 }
 
-function toggleOptionsFields() {
+function toggleAssetFields() {
     const type = document.getElementById('asset-type').value;
     document.getElementById('options-fields').style.display = type === 'options' ? 'block' : 'none';
+    document.getElementById('etf-fields').style.display = type === 'etf' ? 'block' : 'none';
     document.getElementById('multiplier').value = type === 'options' ? 100 : 1;
 }
 
@@ -145,9 +157,12 @@ function updateTable() {
             greeksHtml = `Delta: ${greeks.delta.toFixed(2)}, Gamma: ${greeks.gamma.toFixed(2)}, Theta: ${greeks.theta.toFixed(2)}, Vega: ${greeks.vega.toFixed(2)}, Rho: ${greeks.rho.toFixed(2)}`;
         }
         let dividendsHtml = '';
-        if (trade.assetType === 'etf' && trade.dividends) {
+        if (trade.assetType === 'etf') {
+            const dividend = trade.manualDividend || trade.dividends?.dividend || 0;
+            const payDate = trade.manualExDivDate || trade.dividends?.payDate || 'N/A';
+            const yield_ = trade.dividends?.yield || 0; // Yield only from API
             const gain = trade.dividendGain;
-            dividendsHtml = `Symbol: ${trade.dividends.symbol}, Dividend: ${trade.dividends.dividend}, Pay Date: ${trade.dividends.payDate}, Yield: ${trade.dividends.yield}%, Gain: <span class="${gain > 0 ? 'green' : 'red'}">${gain.toFixed(2)}</span>`;
+            dividendsHtml = `Symbol: ${trade.symbol}, Dividend: ${dividend}, Pay Date: ${payDate}, Yield: ${yield_}%, Gain: <span class="${gain > 0 ? 'green' : 'red'}">${gain.toFixed(2)}</span>`;
         }
         const row = `
             <tr>
@@ -197,7 +212,12 @@ function editTradeForm(index) {
         document.getElementById('risk-free-rate').value = trade.riskFreeRate || '';
     }
 
-    toggleOptionsFields();
+    if (trade.assetType === 'etf') {
+        document.getElementById('ex-div-date').value = trade.manualExDivDate || '';
+        document.getElementById('dividend-per-share').value = trade.manualDividend || '';
+    }
+
+    toggleAssetFields();
     editingIndex = index;
     document.getElementById('submit-button').textContent = 'Update Trade';
 }
@@ -354,6 +374,8 @@ function importCSV(e) {
                 stopLoss: parseFloat(row.stopLoss),
                 takeProfit: parseFloat(row.takeProfit),
                 dividendGain: parseFloat(row.dividendGain) || 0,
+                manualExDivDate: row.manualExDivDate,
+                manualDividend: parseFloat(row.manualDividend) || 0,
                 // Add options fields if present
             }));
             saveTrades();
