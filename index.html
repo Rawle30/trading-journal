@@ -63,6 +63,11 @@
                         <input type="number" id="volatility" placeholder="Implied Volatility" step="0.01">
                         <input type="number" id="risk-free-rate" placeholder="Risk Free Rate" step="0.01">
                     </div>
+                    <!-- For ETFs -->
+                    <div id="etf-fields" style="display:none;">
+                        <input type="date" id="ex-div-date" placeholder="Ex-Dividend Date">
+                        <input type="number" id="dividend-per-share" placeholder="Dividend Per Share" step="0.01">
+                    </div>
                     <!-- Risk Management -->
                     <input type="number" id="stop-loss" placeholder="Stop Loss" step="0.01">
                     <input type="number" id="take-profit" placeholder="Take Profit" step="0.01">
@@ -111,7 +116,7 @@
         <section id="summary">
             <h2>Overall Summary</h2>
             <p>Total Combined Profit/Loss: <span id="total-pl"></span></p>
-            <canvas id="asset-chart" width="50" height="25"></canvas>
+            <canvas id="asset-chart" width="100" height="50"></canvas>
         </section>
     </div>
     <script src="app.js"></script>
