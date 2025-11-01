@@ -1,125 +1,43 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trading Journal</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
-    <!-- Black-Scholes for Greeks: Using a simple implementation -->
-    <script src="black-scholes.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ETF Portfolio Tracker</title>
+  <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-    <div class="ticker-container">
-        <div class="ticker" id="ticker"></div>
-    </div>
-    <div class="container">
-        <header>
-            <h1>Trading Journal</h1>
-            <button id="dark-mode-toggle">Toggle Dark Mode</button>
-            <button id="refresh-prices">Refresh Prices</button>
-        </header>
-        <section id="api-settings">
-            <h2>API Settings</h2>
-            <input type="text" id="api-key-input" placeholder="Enter API Key">
-            <select id="api-provider">
-                <option value="alpha_vantage">Alpha Vantage</option>
-                <option value="finnhub">Finnhub</option>
-                <option value="polygon">Polygon.io</option>
-                <option value="yahoo">Yahoo Finance</option>
-            </select>
-            <button id="save-api-key">Save API Key</button>
-        </section>
-        <!-- New flex container for side-by-side layout -->
-        <div class="entry-summary-flex">
-            <section id="trade-entry">
-                <h2>Add/Edit Trade</h2>
-                <form id="trade-form">
-                    <input type="text" id="symbol" placeholder="Symbol" required>
-                    <select id="asset-type">
-                        <option value="stock">Stock</option>
-                        <option value="crypto">Crypto</option>
-                        <option value="etf">ETF</option>
-                        <option value="options">Options</option>
-                        <option value="fractional">Fractional Shares</option>
-                    </select>
-                    <input type="number" id="quantity" placeholder="Quantity" step="0.0001" required>
-                    <input type="number" id="multiplier" placeholder="Multiplier (for options)" step="1" value="1">
-                    <input type="number" id="entry-price" placeholder="Entry Price" step="0.01" required>
-                    <input type="date" id="entry-date" required>
-                    <input type="number" id="exit-price" placeholder="Exit Price" step="0.01">
-                    <input type="date" id="exit-date">
-                    <input type="text" id="broker" placeholder="Broker">
-                    <textarea id="notes" placeholder="Notes"></textarea>
-                    <!-- For Options -->
-                    <div id="options-fields" style="display:none;">
-                        <input type="number" id="strike" placeholder="Strike Price" step="0.01">
-                        <input type="date" id="expiration" placeholder="Expiration Date">
-                        <select id="option-type">
-                            <option value="call">Call</option>
-                            <option value="put">Put</option>
-                        </select>
-                        <input type="number" id="volatility" placeholder="Implied Volatility" step="0.01">
-                        <input type="number" id="risk-free-rate" placeholder="Risk Free Rate" step="0.01">
-                    </div>
-                    <!-- For ETFs -->
-                    <div id="etf-fields" style="display:none;">
-                        <input type="date" id="ex-div-date" placeholder="Ex-Dividend Date">
-                        <input type="number" id="dividend-per-share" placeholder="Dividend Per Share" step="0.01">
-                    </div>
-                    <!-- Risk Management -->
-                    <input type="number" id="stop-loss" placeholder="Stop Loss" step="0.01">
-                    <input type="number" id="take-profit" placeholder="Take Profit" step="0.01">
-                    <button type="submit" id="submit-button">Add Trade</button>
-                </form>
-                <button id="import-csv">Import CSV</button>
-                <input type="file" id="csv-file" accept=".csv" style="display:none;">
-                <button id="export-csv">Export CSV</button>
-            </section>
-            <section id="broker-summary">
-                <h2>Broker Summary</h2>
-                <h3>Profit/Loss by Broker</h3>
-                <ul id="broker-pl"></ul>
-                <canvas id="pl-chart" width="400" height="200"></canvas>
-            </section>
-        </div>
-        <section id="trades-list">
-            <h2>Trades</h2>
-            <div class="table-container">
-                <table id="trades-table">
-                    <thead>
-                        <tr>
-                            <th>Symbol</th>
-                            <th>Type</th>
-                            <th>Quantity</th>
-                            <th>Multiplier</th>
-                            <th>Entry Price</th>
-                            <th>Entry Date</th>
-                            <th>Exit Price</th>
-                            <th>Exit Date</th>
-                            <th>Current Price</th>
-                            <th>Profit/Loss</th>
-                            <th>Dividend Gain</th>
-                            <th>Combined</th>
-                            <th>Broker</th>
-                            <th>Notes</th>
-                            <th>Actions</th>
-                            <th>Greeks (Options)</th>
-                            <th>Dividends (ETF)</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
-        </section>
-        <section id="summary">
-            <h2>Overall Summary</h2>
-            <p>Total Combined Profit/Loss: <span id="total-pl"></span></p>
-            <canvas id="asset-chart" width="50" height="25"></canvas>
-        </section>
-    </div>
-    <script src="app.js"></script>
+  <header>
+    <h1>📈 ETF Portfolio Dashboard</h1>
+    <button id="themeToggle">🌗 Toggle Dark Mode</button>
+  </header>
+
+  <section id="summary">
+    <canvas id="allocationChart"></canvas>
+  </section>
+
+  <section id="etf-tracker">
+    <h2>📊 ETF Dividend Tracker</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Ticker</th><th>Fund Name</th><th>Shares</th><th>Dividend</th><th>Yield</th>
+          <th>Frequency</th><th>Ex-Date</th><th>Pay-Date</th><th>Reinvested</th><th>Save</th>
+        </tr>
+      </thead>
+      <tbody id="etfTable"></tbody>
+    </table>
+    <button id="exportCSV">📤 Export CSV</button>
+    <input type="file" id="importCSV" accept=".csv" />
+  </section>
+
+  <section id="growth-chart">
+    <h2>📈 Reinvestment Growth Calculator</h2>
+    <canvas id="growthChart"></canvas>
+  </section>
+
+  <script type="module" src="main.js"></script>
 </body>
 </html>
+
 
