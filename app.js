@@ -33,21 +33,20 @@ function createTextCell(value) {
 function addRow() {
   const tr = document.createElement('tr');
   const cells = [
-    createDropdownCell('', typeOptions),     // Type
-    createTextCell(''),                      // Ticker
-    createTextCell(''),                      // Shares
-    createTextCell(''),                      // Purchase Price
-    createTextCell(''),                      // Current Price (editable)
-    createDropdownCell('', sectorOptions),   // Sector
-    createTextCell(''),                      // Dividend
-    createDropdownCell('', actionOptions),   // Buy/Sell
-    createTextCell(''),                      // Date
-    createTextCell('...')                    // Gain/Loss (auto)
+    createDropdownCell('', typeOptions),
+    createTextCell(''), // Ticker
+    createTextCell(''), // Shares
+    createTextCell(''), // Purchase Price
+    createTextCell(''), // Current Price
+    createDropdownCell('', sectorOptions),
+    createTextCell(''), // Dividend
+    createDropdownCell('', actionOptions),
+    createTextCell(''), // Date
+    createTextCell('...') // Gain/Loss
   ];
   cells.forEach(td => tr.appendChild(td));
   table.appendChild(tr);
 }
-
 
 function savePortfolio() {
   const rows = [...table.rows].map(row =>
@@ -75,11 +74,11 @@ function loadPortfolio() {
       tr.appendChild(td);
     });
 
-    const [type, ticker, qty, price, current, , , action] = row;
+    const [type, ticker, qty, price, current] = row;
     const q = parseFloat(qty), p = parseFloat(price), c = parseFloat(current);
 
     const gainTd = document.createElement('td');
-    if (!isNaN(p) && !isNaN(c) && !isNaN(q)) {
+    if (!isNaN(q) && !isNaN(p) && !isNaN(c)) {
       const gainCell = renderGainLossCell(p, c, q);
       tr.appendChild(gainCell);
     } else {
@@ -93,35 +92,25 @@ function loadPortfolio() {
   drawCharts(data);
 }
 
-    const currentPriceTd = createTextCell('Fetching...');
-    tr.insertBefore(currentPriceTd, tr.children[4]);
+function recalculateGainLoss() {
+  [...table.rows].forEach(row => {
+    const cells = row.cells;
+    const qty = parseFloat(cells[2].innerText.trim());
+    const purchase = parseFloat(cells[3].innerText.trim());
+    const current = parseFloat(cells[4].innerText.trim());
 
-    const gainTd = document.createElement('td');
-    gainTd.innerText = '...';
-    tr.appendChild(gainTd);
-    table.appendChild(tr);
-
-    const [type, ticker, qty, price, , sector, div, action, date] = row;
-    const q = parseFloat(qty), p = parseFloat(price);
-
-    fetchCurrentPrice(ticker).then(current => {
-      if (!isNaN(current)) {
-        currentPriceTd.innerText = current.toFixed(2);
-        const gainCell = renderGainLossCell(p, current, q);
-        tr.replaceChild(gainCell, gainTd);
-      } else {
-        currentPriceTd.innerText = 'N/A';
-        gainTd.innerText = 'N/A';
-      }
-    });
+    if (!isNaN(qty) && !isNaN(purchase) && !isNaN(current)) {
+      const gainCell = renderGainLossCell(purchase, current, qty);
+      row.replaceChild(gainCell, cells[9]);
+    } else {
+      cells[9].innerText = '...';
+    }
   });
-  updateMetrics(data);
-  drawCharts(data);
 }
 
 function exportCSV() {
   const rows = [...table.rows].map(row =>
-    [...row.cells].slice(0, 9).map(cell => {
+    [...row.cells].slice(0, 10).map(cell => {
       const select = cell.querySelector('select');
       return `"${select ? select.value : cell.innerText.trim()}"`;
     }).join(',')
@@ -152,27 +141,19 @@ function importCSV(event) {
         tr.appendChild(td);
       });
 
-      const currentPriceTd = createTextCell('Fetching...');
-      tr.insertBefore(currentPriceTd, tr.children[4]);
+      const [type, ticker, qty, price, current] = line.split(',').map(c => c.replace(/"/g, ''));
+      const q = parseFloat(qty), p = parseFloat(price), c = parseFloat(current);
 
       const gainTd = document.createElement('td');
-      gainTd.innerText = '...';
-      tr.appendChild(gainTd);
+      if (!isNaN(q) && !isNaN(p) && !isNaN(c)) {
+        const gainCell = renderGainLossCell(p, c, q);
+        tr.appendChild(gainCell);
+      } else {
+        gainTd.innerText = '...';
+        tr.appendChild(gainTd);
+      }
+
       table.appendChild(tr);
-
-      const [type, ticker, qty, price, , sector, div, action, date] = line.split(',').map(c => c.replace(/"/g, ''));
-      const q = parseFloat(qty), p = parseFloat(price);
-
-      fetchCurrentPrice(ticker).then(current => {
-        if (!isNaN(current)) {
-          currentPriceTd.innerText = current.toFixed(2);
-          const gainCell = renderGainLossCell(p, current, q);
-          tr.replaceChild(gainCell, gainTd);
-        } else {
-          currentPriceTd.innerText = 'N/A';
-          gainTd.innerText = 'N/A';
-        }
-      });
     });
     savePortfolio();
   };
@@ -233,8 +214,7 @@ function drawCharts(data) {
     { ctx: ctxs[3], label: 'Monthly Buy/Sell', data: months },
     { ctx: ctxs[4], label: 'Allocations', data: types }
   ];
-
-  chartData.forEach(({ctx, label, data}) => {
+  chartData.forEach(({ ctx, label, data }) => {
     new Chart(ctx, {
       type: label === 'Monthly Buy/Sell' ? 'line' : (label === 'Sectors' ? 'doughnut' : (label === 'Allocations' ? 'bar' : 'pie')),
       data: {
@@ -273,7 +253,9 @@ function drawCharts(data) {
   });
 }
 
-loadPortfolio();
+table.addEventListener('input', () => {
+  recalculateGainLoss();
+});
 
- 
+loadPortfolio 
 
