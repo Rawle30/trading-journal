@@ -34,15 +34,15 @@ function addRow() {
   const tr = document.createElement('tr');
   const cells = [
     createDropdownCell('', typeOptions),
-    createTextCell(''),
-    createTextCell(''),
-    createTextCell(''),
-    createTextCell('Fetching...'),
+    createTextCell(''), // Ticker
+    createTextCell(''), // Shares
+    createTextCell(''), // Purchase Price
+    createTextCell('Fetching...'), // Current Price (auto-filled)
     createDropdownCell('', sectorOptions),
-    createTextCell(''),
+    createTextCell(''), // Dividend
     createDropdownCell('', actionOptions),
-    createTextCell(''),
-    createTextCell('...')
+    createTextCell(''), // Date
+    createTextCell('...') // Gain/Loss (auto-filled)
   ];
   cells.forEach(td => tr.appendChild(td));
   table.appendChild(tr);
