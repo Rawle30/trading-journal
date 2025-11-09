@@ -24,15 +24,6 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* 📦 Compact Table Box */
-.table-wrapper.compact-table-box {
-  max-height: 320px;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: auto;
-  border: 1px solid #ccc;
-  padding: 0.25rem;
-}
 /* 📦 Scrollable, Compact Table Box */
 .table-wrapper {
   display: block;
@@ -46,35 +37,22 @@ body {
 
 /* 📋 Table Styling */
 #portfolioTable {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.75rem;
-  table-layout: fixed;
-}
-
-#portfolioTable th,
-#portfolioTable td {
-  border: 1px solid #ccc;
-  padding: 0.2rem 0.4rem;
-  text-align: center;
-  min-width: 90px;
-  word-wrap: break-word;
-}
-
-
-/* 📋 Table Styling */
-#portfolioTable {
   width: max-content;
   border-collapse: collapse;
   font-size: 0.75rem;
+  table-layout: auto;
 }
 
 #portfolioTable th,
 #portfolioTable td {
   border: 1px solid #ccc;
-  padding: 0.2rem 0.4rem;
+  padding: 0.2rem 0.3rem;
   text-align: center;
-  min-width: 90px;
+  min-width: 80px;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .editable-cell {
@@ -114,7 +92,7 @@ canvas {
 .red { color: var(--red); }
 .neutral { color: inherit; }
 
-/* 🌓 Dark Mode Toggle Button (optional) */
+/* 🌓 Dark Mode Toggle Button */
 header button {
   background: var(--box);
   color: var(--text);
@@ -123,6 +101,7 @@ header button {
   border-radius: 4px;
   cursor: pointer;
 }
+
 
 
 
