@@ -9,47 +9,48 @@
 <body>
   <header>
     <h1>📊 Portfolio Tracker</h1>
-    <button onclick="toggleDarkMode()">🌓 Dark Mode</button>
+    <button onclick="toggleDarkMode()">🌓</button>
   </header>
 
   <section class="controls">
-    <button onclick="addRow()">➕ Add Row</button>
-    <button onclick="recalculateGainLoss()">🔄 Recalculate</button>
-    <button onclick="savePortfolio()">💾 Save</button>
-    <button onclick="exportCSV()">⬇️ Export CSV</button>
+    <button onclick="addRow()">➕ Add</button>
+    <button onclick="recalculate()">🔄 Recalc</button>
+    <button onclick="save()">💾 Save</button>
+    <button onclick="exportCSV()">⬇️ Export</button>
     <input type="file" onchange="importCSV(event)" />
   </section>
 
   <section class="summary">
-    <div id="investedCapital" class="box">Invested Capital: $0</div>
-    <div id="portfolioValue" class="box">Portfolio Value: $0</div>
-    <div id="gainLoss" class="box">Gain/Loss: $0</div>
-    <div id="monthlyInvestment" class="box">Monthly Investment: $0</div>
-    <div id="totalShares" class="box">Total Shares Held: 0</div>
-    <div id="bestPerformer" class="box">Best Performing: -</div>
-    <div id="worstPerformer" class="box">Worst Performing: -</div>
+    <div id="invested">Invested: $0</div>
+    <div id="value">Value: $0</div>
+    <div id="gain" class="neutral">Gain/Loss: $0</div>
+    <div id="monthly">Monthly: $0</div>
+    <div id="shares">Shares: 0</div>
+    <div id="best">Best: -</div>
+    <div id="worst">Worst: -</div>
   </section>
 
-  <table id="portfolioTable">
+  <table id="portfolio">
     <thead>
       <tr>
-        <th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Current</th><th>Sector</th><th>Dividend</th><th>Buy/Sell</th><th>Date</th><th>Gain/Loss</th>
+        <th>Type</th><th>Ticker</th><th>Qty@Price</th><th>Current</th><th>Sector</th><th>Buy/Sell</th><th>Date</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
   <section class="charts">
-    <canvas id="dividendChart"></canvas>
-    <canvas id="sharesChart"></canvas>
-    <canvas id="sectorChart"></canvas>
+    <canvas id="dividends"></canvas>
+    <canvas id="holdings"></canvas>
+    <canvas id="sectors"></canvas>
     <canvas id="monthlyChart"></canvas>
-    <canvas id="allocationChart"></canvas>
+    <canvas id="allocations"></canvas>
   </section>
 
   <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
