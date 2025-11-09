@@ -1,45 +1,43 @@
-:root {
-  --bg: #ffffff;
-  --text: #000000;
-  --positive: green;
-  --negative: red;
-  --box: #f0f0f0;
-}
-body.dark {
-  --bg: #121212;
-  --text: #eeeeee;
-  --box: #1e1e1e;
-}
 body {
-  background: var(--bg);
-  color: var(--text);
   font-family: sans-serif;
-  margin: 0;
-  padding: 1rem;
+  margin: 2rem;
+  background: #f9f9f9;
+  color: #333;
 }
-.summary-box {
-  display: inline-block;
-  background: var(--box);
-  padding: 1rem;
-  margin: 0.5rem;
-  border-radius: 8px;
-  min-width: 200px;
+h1 {
+  margin-bottom: 1rem;
 }
-.green { color: var(--positive); }
-.red { color: var(--negative); }
+.controls {
+  margin-bottom: 1rem;
+}
+button {
+  margin-right: 0.5rem;
+  padding: 0.5rem 1rem;
+}
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 1rem;
+  background: #fff;
 }
 th, td {
   border: 1px solid #ccc;
   padding: 0.5rem;
   text-align: center;
 }
-canvas {
-  width: 100% !important;
-  height: 300px !important;
+td {
+  min-width: 100px;
+}
+td[contenteditable="true"] {
+  background: #eef;
+}
+select {
+  width: 100%;
+}
+.green {
+  color: green;
+}
+.red {
+  color: red;
 }
 .chart-container {
   display: grid;
@@ -47,9 +45,9 @@ canvas {
   gap: 1rem;
   margin-top: 2rem;
 }
-button {
-  margin: 1rem 0.5rem;
-  padding: 0.5rem 1rem;
+canvas {
+  width: 100% !important;
+  height: 300px !important;
 }
 
 
