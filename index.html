@@ -2,42 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ETF Portfolio Tracker</title>
-  <link rel="stylesheet" href="assets/styles.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Portfolio Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <header>
-    <h1>📈 ETF Portfolio Dashboard</h1>
-    <button id="themeToggle">🌗 Toggle Dark Mode</button>
-  </header>
+  <h1>📈 Portfolio Tracker</h1>
+  <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
+  <button onclick="addRow()">➕ Add Row</button>
+  <button onclick="savePortfolio()">💾 Save</button>
+  <button onclick="exportCSV()">⬇️ Export CSV</button>
+  <input type="file" onchange="importCSV(event)" />
 
-  <section id="summary">
-    <canvas id="allocationChart"></canvas>
-  </section>
+  <div id="metrics">
+    <div class="summary-box" id="investedCapital">Invested Capital: $0</div>
+    <div class="summary-box" id="portfolioValue">Portfolio Value: $0</div>
+    <div class="summary-box" id="gainLoss">Gain/Loss: $0</div>
+    <div class="summary-box" id="monthlyInvestment">Monthly Investment: $0</div>
+    <div class="summary-box" id="totalShares">Total Shares Held: 0</div>
+    <div class="summary-box" id="bestPerformer">Best Performing: -</div>
+    <div class="summary-box" id="worstPerformer">Worst Performing: -</div>
+  </div>
 
-  <section id="etf-tracker">
-    <h2>📊 ETF Dividend Tracker</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Ticker</th><th>Fund Name</th><th>Shares</th><th>Dividend</th><th>Yield</th>
-          <th>Frequency</th><th>Ex-Date</th><th>Pay-Date</th><th>Reinvested</th><th>Save</th>
-        </tr>
-      </thead>
-      <tbody id="etfTable"></tbody>
-    </table>
-    <button id="exportCSV">📤 Export CSV</button>
-    <input type="file" id="importCSV" accept=".csv" />
-  </section>
+  <table id="portfolioTable">
+    <thead>
+      <tr>
+        <th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Current Price</th><th>Sector</th><th>Dividend</th><th>Buy/Sell</th><th>Date</th><th>Gain/Loss</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-  <section id="growth-chart">
-    <h2>📈 Reinvestment Growth Calculator</h2>
-    <canvas id="growthChart"></canvas>
-  </section>
+  <canvas id="dividendChart"></canvas>
+  <canvas id="sharesChart"></canvas>
+  <canvas id="sectorChart"></canvas>
+  <canvas id="monthlyChart"></canvas>
+  <canvas id="allocationChart"></canvas>
 
-  <script type="module" src="main.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
 </html>
+
 
 
