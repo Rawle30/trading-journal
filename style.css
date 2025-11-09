@@ -37,7 +37,8 @@ body {
 
 /* 📋 Table Styling */
 #portfolioTable {
-  width: max-content;
+  width: 75%; /* Reduced width by 25% */
+  min-width: 800px; /* Ensures horizontal scroll triggers */
   border-collapse: collapse;
   font-size: 0.75rem;
   table-layout: auto;
@@ -48,8 +49,7 @@ body {
   border: 1px solid #ccc;
   padding: 0.2rem 0.3rem;
   text-align: center;
-  min-width: 80px;
-  max-width: 120px;
+  min-width: 90px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
