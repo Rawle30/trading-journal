@@ -1,7 +1,13 @@
-const typeOptions = ['Stock', 'Option', 'ETF'];
+const table = document.querySelector('#portfolioTable tbody');
+const typeOptions = ['Stock', 'Option', 'ETF', 'Dividend'];
 const actionOptions = ['Buy', 'Sell'];
+const sectorOptions = ['Technology', 'Finance', 'Healthcare', 'Energy', 'Consumer', 'Utilities', 'Other'];
 
-function createDropdown(options, value = '') {
+function toggleDarkMode() {
+  document.body.classList.toggle('dark');
+}
+
+function createDropdownCell(value, options) {
   const td = document.createElement('td');
   const select = document.createElement('select');
   options.forEach(opt => {
@@ -15,39 +21,40 @@ function createDropdown(options, value = '') {
   return td;
 }
 
-function createCell(value = '') {
+function createTextCell(value) {
   const td = document.createElement('td');
-  td.contentEditable = true;
   td.innerText = value;
+  td.contentEditable = true;
   return td;
 }
-
 function addRow() {
   const tr = document.createElement('tr');
-  tr.appendChild(createDropdown(typeOptions));
-  tr.appendChild(createCell('')); // Ticker
-  tr.appendChild(createCell('')); // Shares
-  tr.appendChild(createCell('')); // Purchase Price
-  tr.appendChild(createCell('')); // Current Price
-  tr.appendChild(createDropdown(actionOptions));
-  tr.appendChild(createCell('')); // Date
-  const gainCell = document.createElement('td');
-  gainCell.innerText = '...';
-  tr.appendChild(gainCell);
-  document.querySelector('#portfolioTable tbody').appendChild(tr);
+  const cells = [
+    createDropdownCell('', typeOptions),
+    createTextCell(''), // Ticker
+    createTextCell(''), // Shares
+    createTextCell(''), // Purchase Price
+    createTextCell(''), // Current Price
+    createDropdownCell('', actionOptions),
+    createDropdownCell('', sectorOptions),
+    createTextCell(''), // Dividend
+    createTextCell(''), // Date
+    createTextCell('...') // Gain/Loss
+  ];
+  cells.forEach(td => tr.appendChild(td));
+  table.appendChild(tr);
 }
 
 function recalculateGainLoss() {
-  const rows = document.querySelectorAll('#portfolioTable tbody tr');
-  rows.forEach(row => {
+  [...table.rows].forEach(row => {
     const cells = row.cells;
-    const shares = parseFloat(cells[2].innerText.trim());
+    const qty = parseFloat(cells[2].innerText.trim());
     const purchase = parseFloat(cells[3].innerText.trim());
     const current = parseFloat(cells[4].innerText.trim());
-    const gainCell = cells[7];
+    const gainCell = cells[9];
 
-    if (!isNaN(shares) && !isNaN(purchase) && !isNaN(current)) {
-      const gain = (current - purchase) * shares;
+    if (!isNaN(qty) && !isNaN(purchase) && !isNaN(current)) {
+      const gain = (current - purchase) * qty;
       gainCell.innerText = `$${gain.toFixed(2)}`;
       gainCell.className = gain >= 0 ? 'green' : 'red';
     } else {
@@ -55,12 +62,12 @@ function recalculateGainLoss() {
       gainCell.className = '';
     }
   });
+  updateMetrics();
   drawCharts();
 }
-
 function savePortfolio() {
-  const rows = [...document.querySelectorAll('#portfolioTable tbody tr')].map(row =>
-    [...row.cells].slice(0, 7).map(cell => {
+  const rows = [...table.rows].map(row =>
+    [...row.cells].slice(0, 9).map(cell => {
       const select = cell.querySelector('select');
       return select ? select.value : cell.innerText.trim();
     })
@@ -70,28 +77,26 @@ function savePortfolio() {
 
 function loadPortfolio() {
   const data = JSON.parse(localStorage.getItem('portfolioData') || '[]');
-  const tbody = document.querySelector('#portfolioTable tbody');
-  tbody.innerHTML = '';
-  data.forEach(([type, ticker, shares, price, current, action, date]) => {
+  table.innerHTML = '';
+  data.forEach(row => {
     const tr = document.createElement('tr');
-    tr.appendChild(createDropdown(typeOptions, type));
-    tr.appendChild(createCell(ticker));
-    tr.appendChild(createCell(shares));
-    tr.appendChild(createCell(price));
-    tr.appendChild(createCell(current));
-    tr.appendChild(createDropdown(actionOptions, action));
-    tr.appendChild(createCell(date));
-    const gainCell = document.createElement('td');
-    gainCell.innerText = '...';
-    tr.appendChild(gainCell);
-    tbody.appendChild(tr);
+    row.forEach((cell, i) => {
+      let td;
+      if (i === 0) td = createDropdownCell(cell, typeOptions);
+      else if (i === 5) td = createDropdownCell(cell, actionOptions);
+      else if (i === 6) td = createDropdownCell(cell, sectorOptions);
+      else td = createTextCell(cell);
+      tr.appendChild(td);
+    });
+    tr.appendChild(createTextCell('...')); // Gain/Loss
+    table.appendChild(tr);
   });
   recalculateGainLoss();
 }
 
 function exportCSV() {
-  const rows = [...document.querySelectorAll('#portfolioTable tbody tr')].map(row =>
-    [...row.cells].slice(0, 7).map(cell => {
+  const rows = [...table.rows].map(row =>
+    [...row.cells].slice(0, 9).map(cell => {
       const select = cell.querySelector('select');
       return `"${select ? select.value : cell.innerText.trim()}"`;
     }).join(',')
@@ -109,100 +114,137 @@ function importCSV(event) {
   const reader = new FileReader();
   reader.onload = e => {
     const lines = e.target.result.split('\n');
-    const tbody = document.querySelector('#portfolioTable tbody');
-    tbody.innerHTML = '';
+    table.innerHTML = '';
     lines.forEach(line => {
-      const [type, ticker, shares, price, current, action, date] = line.split(',').map(cell => cell.replace(/"/g, '').trim());
+      const row = line.split(',').map(cell => cell.replace(/"/g, '').trim());
       const tr = document.createElement('tr');
-      tr.appendChild(createDropdown(typeOptions, type));
-      tr.appendChild(createCell(ticker));
-      tr.appendChild(createCell(shares));
-      tr.appendChild(createCell(price));
-      tr.appendChild(createCell(current));
-      tr.appendChild(createDropdown(actionOptions, action));
-      tr.appendChild(createCell(date));
-      const gainCell = document.createElement('td');
-      gainCell.innerText = '...';
-      tr.appendChild(gainCell);
-      tbody.appendChild(tr);
+      row.forEach((cell, i) => {
+        let td;
+        if (i === 0) td = createDropdownCell(cell, typeOptions);
+        else if (i === 5) td = createDropdownCell(cell, actionOptions);
+        else if (i === 6) td = createDropdownCell(cell, sectorOptions);
+        else td = createTextCell(cell);
+        tr.appendChild(td);
+      });
+      tr.appendChild(createTextCell('...'));
+      table.appendChild(tr);
     });
     recalculateGainLoss();
     savePortfolio();
   };
   reader.readAsText(file);
 }
+function updateMetrics() {
+  let invested = 0, value = 0, shares = 0, monthly = 0;
+  let perf = [], now = new Date().getMonth();
 
-function drawCharts() {
-  const rows = [...document.querySelectorAll('#portfolioTable tbody tr')];
-  const typeData = {};
-  const monthData = {};
+  [...table.rows].forEach(row => {
+    const cells = row.cells;
+    const qty = parseFloat(cells[2].innerText.trim());
+    const price = parseFloat(cells[3].innerText.trim());
+    const current = parseFloat(cells[4].innerText.trim());
+    const dividend = parseFloat(cells[7].innerText.trim());
+    const action = cells[5].querySelector('select')?.value || '';
+    const ticker = cells[1].innerText.trim();
+    const date = new Date(cells[8].innerText.trim());
 
-  rows.forEach(row => {
-    const type = row.cells[0].querySelector('select')?.value || '';
-    const shares = parseFloat(row.cells[2].innerText.trim());
-    const date = row.cells[6].innerText.trim();
-    const month = new Date(date).toLocaleString('default', { month: 'short' });
-
-    if (!isNaN(shares)) {
-      typeData[type] = (typeData[type] || 0) + shares;
-      monthData[month] = (monthData[month] || 0) + shares;
+    if (!isNaN(qty) && !isNaN(price)) {
+      if (action === 'Buy') {
+        invested += qty * price;
+        if (date.getMonth() === now) monthly += qty * price;
+      }
+      shares += qty;
+      value += qty * current;
+      perf.push({ ticker, gain: (current - price) * qty + dividend });
     }
   });
 
-  new Chart(document.getElementById('allocationChart').getContext('2d'), {
-    type: 'pie',
-    data: {
-      labels: Object.keys(typeData),
-      datasets: [{
-        label: 'Asset Allocation',
-        data: Object.values(typeData),
-        backgroundColor: ['#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0', '#00bcd4', '#ffc107'
-      ],
-      borderWidth: 1
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: true },
-      tooltip: { mode: 'index', intersect: false }
-    }
-  }
-});
+  const gain = value - invested;
+  const best = perf.sort((a,b) => b.gain - a.gain)[0]?.ticker || '-';
+  const worst = perf.sort((a,b) => a.gain - b.gain)[0]?.ticker || '-';
 
-new Chart(document.getElementById('monthlyChart').getContext('2d'), {
-  type: 'bar',
-  data: {
-    labels: Object.keys(monthData),
-    datasets: [{
-      label: 'Monthly Activity',
-      data: Object.values(monthData),
-      backgroundColor: '#2196f3'
-    }]
-  },
-  options: {
-    responsive: true,
-    plugins: {
-      legend: { display: false },
-      tooltip: { mode: 'index', intersect: false }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          color: getComputedStyle(document.body).getPropertyValue('--text')
-        }
-      },
-      x: {
-        ticks: {
-          color: getComputedStyle(document.body).getPropertyValue('--text')
-        }
-      }
+  document.getElementById('investedCapital').innerText = `Invested Capital: $${invested.toFixed(2)}`;
+  document.getElementById('portfolioValue').innerText = `Portfolio Value: $${value.toFixed(2)}`;
+  document.getElementById('gainLoss').innerText = `Gain/Loss: $${gain.toFixed(2)}`;
+  document.getElementById('gainLoss').className = `box ${gain >= 0 ? 'green' : 'red'}`;
+  document.getElementById('monthlyInvestment').innerText = `Monthly Investment: $${monthly.toFixed(2)}`;
+  document.getElementById('totalShares').innerText = `Total Shares Held: ${shares}`;
+  document.getElementById('bestPerformer').innerText = `Best Performing: ${best}`;
+  document.getElementById('worstPerformer').innerText = `Worst Performing: ${worst}`;
+}
+
+function drawCharts() {
+  const dividendData = {}, sharesData = {}, sectorData = {}, monthData = {}, typeData = {};
+
+  [...table.rows].forEach(row => {
+    const cells = row.cells;
+    const ticker = cells[1].innerText.trim();
+    const qty = parseFloat(cells[2].innerText.trim());
+    const dividend = parseFloat(cells[7].innerText.trim());
+    const sector = cells[6].querySelector('select')?.value || '';
+    const type = cells[0].querySelector('select')?.value || '';
+    const action = cells[5].querySelector('select')?.value || '';
+    const date = new Date(cells[8].innerText.trim());
+    const month = date.toLocaleString('default', { month: 'short' });
+
+    if (!isNaN(dividend)) dividendData[ticker] = (dividendData[ticker] || 0) + dividend;
+    if (!isNaN(qty)) {
+      sharesData[ticker] = (sharesData[ticker] || 0) + qty;
+      sectorData[sector] = (sectorData[sector] || 0) + qty;
+      typeData[type] = (typeData[type] || 0) + qty;
+      monthData[month] = (monthData[month] || 0) + (action === 'Buy' ? qty : -qty);
     }
-  }
-});
+  });
+
+  const chartConfigs = [
+    { id: 'dividendChart', label: 'Dividends', data: dividendData, type: 'pie' },
+    { id: 'sharesChart', label: 'Shares Held', data: sharesData, type: 'bar' },
+    { id: 'sectorChart', label: 'Sectors', data: sectorData, type: 'doughnut' },
+    { id: 'monthlyChart', label: 'Monthly Buy/Sell', data: monthData, type: 'line' },
+    { id: 'allocationChart', label: 'Allocations', data: typeData, type: 'bar' }
+  ];
+
+  chartConfigs.forEach(({ id, label, data, type }) => {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type,
+      data: {
+        labels: Object.keys(data),
+        datasets: [{
+          label,
+          data: Object.values(data),
+          backgroundColor: [
+            '#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0',
+            '#00bcd4', '#ffc107', '#8bc34a', '#3f51b5', '#f44336'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: true },
+          tooltip: { mode: 'index', intersect: false }
+        },
+        scales: type === 'bar' || type === 'line' ? {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: getComputedStyle(document.body).getPropertyValue('--text')
+            }
+          },
+          x: {
+            ticks: {
+              color: getComputedStyle(document.body).getPropertyValue('--text')
+            }
+          }
+        } : {}
+      }
+    });
+  });
 }
 
 document.addEventListener('DOMContentLoaded', loadPortfolio);
+
 
 
