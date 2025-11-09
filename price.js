@@ -32,3 +32,4 @@ export function renderGainLossCell(purchasePrice, currentPrice, shares) {
   td.appendChild(bar);
   return td;
 }
+
