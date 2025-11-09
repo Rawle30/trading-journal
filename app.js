@@ -34,15 +34,18 @@ function parseQtyPrice(cell) {
 }
 function addRow() {
   const tr = document.createElement('tr');
-  tr.appendChild(createDropdown(typeOptions));
-  tr.appendChild(createCell('')); // Ticker
-  tr.appendChild(createCell('')); // Qty@Price
-  tr.appendChild(createCell('')); // Current
-  tr.appendChild(createDropdown(sectorOptions));
-  tr.appendChild(createDropdown(actionOptions));
-  tr.appendChild(createCell('')); // Date
+  tr.appendChild(createDropdownCell('', typeOptions));     // Type
+  tr.appendChild(createTextCell(''));                      // Ticker
+  tr.appendChild(createTextCell(''));                      // Quantity
+  tr.appendChild(createTextCell(''));                      // Purchase Price
+  tr.appendChild(createTextCell(''));                      // Current Price
+  tr.appendChild(createDropdownCell('', sectorOptions));   // Sector
+  tr.appendChild(createTextCell(''));                      // Dividend
+  tr.appendChild(createDropdownCell('', actionOptions));   // Action
+  tr.appendChild(createTextCell(''));                      // Date
   table.appendChild(tr);
 }
+
 
 function recalculate() {
   let invested = 0, value = 0, shares = 0, monthly = 0;
