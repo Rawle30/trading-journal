@@ -3,22 +3,37 @@
 <head>
   <meta charset="UTF-8" />
   <title>Portfolio Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <button onclick="addRow()">Add Row</button>
-  <button onclick="savePortfolio()">Save</button>
-  <button onclick="recalculateGainLoss()">Recalculate Gain/Loss</button>
+  <h1>📈 Portfolio Tracker</h1>
+  <div class="controls">
+    <button onclick="addRow()">➕ Add Row</button>
+    <button onclick="recalculateGainLoss()">🔄 Recalculate Gain/Loss</button>
+    <button onclick="savePortfolio()">💾 Save</button>
+    <button onclick="exportCSV()">⬇️ Export CSV</button>
+    <input type="file" onchange="importCSV(event)" />
+  </div>
+
   <table id="portfolioTable">
     <thead>
       <tr>
-        <th>Ticker</th><th>Shares</th><th>Price</th><th>Current</th><th>Gain/Loss</th>
+        <th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Current</th><th>Buy/Sell</th><th>Date</th><th>Gain/Loss</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-  <script type="module" src="app.js"></script>
+
+  <div class="chart-container">
+    <canvas id="allocationChart"></canvas>
+    <canvas id="monthlyChart"></canvas>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
