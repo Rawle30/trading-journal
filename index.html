@@ -13,12 +13,12 @@
   </header>
 
   <section class="controls">
-    <button onclick="addRow()">➕ Add</button>
-    <button onclick="recalculate()">🔄 Recalc</button>
-    <button onclick="updatePrices()">💲 Update Prices</button>
-    <button onclick="save()">💾 Save</button>
-    <button onclick="exportCSV()">⬇️ Export</button>
-    <input type="file" onchange="importCSV(event)" />
+    <button id="addRowBtn">➕ Add</button>
+    <button id="recalcBtn">🔄 Recalc</button>
+    <button id="updatePricesBtn">💲 Update Prices</button>
+    <button id="saveBtn">💾 Save</button>
+    <button id="exportBtn">⬇️ Export</button>
+    <input type="file" id="csvInput" />
   </section>
 
   <section class="summary">
@@ -31,7 +31,7 @@
     <div id="worst">Worst: -</div>
   </section>
 
-  <div class="table-wrapper">
+  <div class="table-wrapper compact-table-box">
     <table id="portfolioTable">
       <thead>
         <tr>
@@ -45,6 +45,9 @@
           <th>Action</th>
           <th>Date</th>
           <th>Broker</th>
+          <th>Options Multiplier</th>
+          <th>Exit Price</th>
+          <th>Exit Date</th>
         </tr>
       </thead>
       <tbody></tbody>
