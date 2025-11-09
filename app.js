@@ -1,5 +1,5 @@
 /* Part 1: Constants, DOM refs, utilities */
-const API_KEY = 'YOUR_API_KEY'; // replace
+const API_KEY = 'FTDRTP0955507PPC'; // replace
 const ALPHA_VANTAGE_DELAY_MS = 13000;
 const tableBody = document.querySelector('#portfolioTable tbody');
 const CHART_IDS = ['dividends','holdings','sectors','monthlyChart','allocations'];
