@@ -27,6 +27,7 @@ export function renderGainLossCell(purchasePrice, currentPrice, shares) {
   bar.style.background = gain >= 0 ? 'green' : 'red';
   bar.style.marginTop = '4px';
 
+  td.innerHTML = '';
   td.appendChild(icon);
   td.append(`$${gain.toFixed(2)}`);
   td.appendChild(bar);
