@@ -109,7 +109,7 @@ function exportCSV() {
   );
   const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
   const a = document.createElement('a');
-   a.href = URL.createObjectURL(blob);
+  a.href = URL.createObjectURL(blob);
   a.download = 'portfolio.csv';
   a.click();
 }
@@ -192,7 +192,6 @@ function updateMetrics(data) {
 function drawCharts(data) {
   const ctxs = ['dividendChart','sharesChart','sectorChart','monthlyChart','allocationChart'].map(id => {
     const canvas = document.getElementById(id);
-    canvas.height = 200;
     return canvas.getContext('2d');
   });
 
@@ -238,8 +237,17 @@ function drawCharts(data) {
           tooltip: { mode: 'index', intersect: false }
         },
         scales: label === 'Monthly Buy/Sell' || label === 'Allocations' ? {
-          y: { beginAtZero: true },
-          x: { ticks: { color: getComputedStyle(document.body).getPropertyValue('--text') } }
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: getComputedStyle(document.body).getPropertyValue('--text')
+            }
+          },
+          x: {
+            ticks: {
+              color: getComputedStyle(document.body).getPropertyValue('--text')
+            }
+          }
         } : {}
       }
     });
@@ -247,5 +255,6 @@ function drawCharts(data) {
 }
 
 loadPortfolio();
+
  
 
