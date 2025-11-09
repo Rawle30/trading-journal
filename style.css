@@ -1,13 +1,13 @@
 :root {
-  --bg: #ffffff;
-  --text: #000000;
+  --bg: #fff;
+  --text: #000;
   --box: #f0f0f0;
-  --positive: green;
-  --negative: red;
+  --green: green;
+  --red: red;
 }
 body.dark {
   --bg: #121212;
-  --text: #eeeeee;
+  --text: #eee;
   --box: #1e1e1e;
 }
 body {
@@ -27,29 +27,31 @@ header {
 }
 button {
   margin-right: 0.5rem;
-  padding: 0.5rem 1rem;
+  padding: 0.4rem 0.8rem;
 }
 .summary {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
   margin-bottom: 1rem;
 }
-.box {
+.summary div {
   background: var(--box);
-  padding: 1rem;
-  border-radius: 8px;
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
 }
-.green { color: var(--positive); }
-.red { color: var(--negative); }
+.green { color: var(--green); }
+.red { color: var(--red); }
+.neutral { color: inherit; }
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-bottom: 2rem;
+  font-size: 0.85rem;
 }
 th, td {
   border: 1px solid #ccc;
-  padding: 0.5rem;
+  padding: 0.3rem;
   text-align: center;
 }
 td[contenteditable="true"] {
@@ -60,12 +62,13 @@ select {
 }
 .charts {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
 }
 canvas {
   width: 100% !important;
-  height: 300px !important;
+  height: 250px !important;
 }
 
 
