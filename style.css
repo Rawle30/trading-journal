@@ -70,6 +70,30 @@ canvas {
   width: 100% !important;
   height: 250px !important;
 }
+.table-wrapper {
+  overflow-x: auto;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+}
+#portfolioTable {
+  width: max-content;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+#portfolioTable th, #portfolioTable td {
+  border: 1px solid #ccc;
+  padding: 0.3rem 0.5rem;
+  text-align: center;
+  min-width: 100px;
+}
+#portfolioTable td[contenteditable="true"] {
+  background: #eef;
+}
+#portfolioTable select {
+  width: 100%;
+  font-size: 0.8rem;
+}
 
 
 
