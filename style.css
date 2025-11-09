@@ -1,0 +1,47 @@
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --positive: green;
+  --negative: red;
+  --box: #f0f0f0;
+}
+body.dark {
+  --bg: #121212;
+  --text: #eeeeee;
+  --box: #1e1e1e;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: sans-serif;
+  margin: 0;
+  padding: 1rem;
+}
+.summary-box {
+  display: inline-block;
+  background: var(--box);
+  padding: 1rem;
+  margin: 0.5rem;
+  border-radius: 8px;
+  min-width: 200px;
+}
+.green { color: var(--positive); }
+.red { color: var(--negative); }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
+th, td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: center;
+}
+canvas {
+  max-width: 100%;
+  margin: 2rem 0;
+}
+button {
+  margin: 1rem 0.5rem;
+  padding: 0.5rem 1rem;
+}
