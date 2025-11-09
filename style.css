@@ -1,31 +1,56 @@
-body {
-  font-family: sans-serif;
-  margin: 2rem;
-  background: #f9f9f9;
-  color: #333;
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --box: #f0f0f0;
+  --positive: green;
+  --negative: red;
 }
-h1 {
-  margin-bottom: 1rem;
+body.dark {
+  --bg: #121212;
+  --text: #eeeeee;
+  --box: #1e1e1e;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: sans-serif;
+  margin: 0;
+  padding: 1rem;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 .controls {
-  margin-bottom: 1rem;
+  margin: 1rem 0;
 }
 button {
   margin-right: 0.5rem;
   padding: 0.5rem 1rem;
 }
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.box {
+  background: var(--box);
+  padding: 1rem;
+  border-radius: 8px;
+}
+.green { color: var(--positive); }
+.red { color: var(--negative); }
 table {
   width: 100%;
   border-collapse: collapse;
-  background: #fff;
+  margin-bottom: 2rem;
 }
 th, td {
   border: 1px solid #ccc;
   padding: 0.5rem;
   text-align: center;
-}
-td {
-  min-width: 100px;
 }
 td[contenteditable="true"] {
   background: #eef;
@@ -33,21 +58,15 @@ td[contenteditable="true"] {
 select {
   width: 100%;
 }
-.green {
-  color: green;
-}
-.red {
-  color: red;
-}
-.chart-container {
+.charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
+  gap: 2rem;
 }
 canvas {
   width: 100% !important;
   height: 300px !important;
 }
+
 
 
