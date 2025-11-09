@@ -15,6 +15,7 @@
   <section class="controls">
     <button onclick="addRow()">➕ Add</button>
     <button onclick="recalculate()">🔄 Recalc</button>
+    <button onclick="updatePrices()">💲 Update Prices</button>
     <button onclick="save()">💾 Save</button>
     <button onclick="exportCSV()">⬇️ Export</button>
     <input type="file" onchange="importCSV(event)" />
@@ -30,24 +31,24 @@
     <div id="worst">Worst: -</div>
   </section>
 
-<div class="table-wrapper">
-  <table id="portfolioTable">
-    <thead>
-      <tr>
-        <th>Type</th>
-        <th>Ticker</th>
-        <th>Quantity</th>
-        <th>Purchase Price</th>
-        <th>Current Price</th>
-        <th>Sector</th>
-        <th>Dividend</th>
-        <th>Action</th>
-        <th>Date</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</div>
+  <div class="table-wrapper">
+    <table id="portfolioTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Ticker</th>
+          <th>Quantity</th>
+          <th>Purchase Price</th>
+          <th>Current Price</th>
+          <th>Sector</th>
+          <th>Dividend</th>
+          <th>Action</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <section class="charts">
     <canvas id="dividends"></canvas>
@@ -60,6 +61,7 @@
   <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
