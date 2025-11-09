@@ -1,4 +1,4 @@
-const API_KEY = 'FTDRTP0955507PPC'; // Replace with your Alpha Vantage key
+const API_KEY = 'YOUR_API_KEY'; // Replace with your Alpha Vantage key
 const table = document.querySelector('#portfolioTable tbody');
 const typeOptions = ['Stock', 'Option', 'ETF', 'Dividend'];
 const actionOptions = ['Buy', 'Sell', 'Dividend'];
@@ -50,6 +50,96 @@ function addRow() {
   table.appendChild(tr);
 }
 
+function readRow(row) {
+  const c = row.cells;
+  return {
+    type: c[0].querySelector('select').value,
+    ticker: c[1].innerText.trim(),
+    quantity: toFloat(c[2].innerText),
+    purchase: toFloat(c[3].innerText),
+    current: toFloat(c[4].innerText),
+    sector: c[5].querySelector('select').value,
+    dividend: toFloat(c[6].innerText),
+    action: c[7].querySelector('select').value,
+    date: new Date(c[8].innerText.trim()),
+    broker: c[9].querySelector('select').value,
+    multiplier: toFloat(c[10].innerText) || 1,
+    exit: toFloat(c[11].innerText),
+    exitDate: new Date(c[12].innerText.trim())
+  };
+}
+async function fetchPrice(ticker) {
+  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${API_KEY}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const price = parseFloat(data['Global Quote']?.['05. price']);
+  return isNaN(price) ? null : price;
+}
+
+async function updatePrices() {
+  for (const row of table.rows) {
+    const ticker = row.cells[1].innerText.trim();
+    if (!ticker) continue;
+    try {
+      const price = await fetchPrice(ticker);
+      if (price !== null) row.cells[4].innerText = price.toFixed(2);
+    } catch (err) {
+      console.warn(`Failed to fetch price for ${ticker}`);
+    }
+    await new Promise(r => setTimeout(r, 15000));
+  }
+  recalculate();
+}
+
+function recalculate() {
+  let invested = 0, value = 0, shares = 0, monthly = 0;
+  const perf = [], now = new Date().getMonth();
+  const dividends = {}, holdings = {}, sectors = {}, months = {}, types = {};
+
+  [...table.rows].forEach(row => {
+    const r = readRow(row);
+    if (!r.ticker || isNaN(r.quantity) || isNaN(r.purchase)) return;
+
+    const price = isNaN(r.exit) || !r.exitDate ? r.current : r.exit;
+    const multiplier = r.type === 'Option' ? r.multiplier : 1;
+
+    if (r.action === 'Buy') {
+      invested += r.quantity * r.purchase * multiplier;
+      if (r.date.getMonth() === now) monthly += r.quantity * r.purchase * multiplier;
+    }
+
+    shares += r.quantity * multiplier;
+    value += r.quantity * price * multiplier;
+    perf.push({ ticker: r.ticker, gain: (price - r.purchase) * r.quantity * multiplier + r.dividend });
+
+    dividends[r.ticker] = (dividends[r.ticker] || 0) + r.dividend;
+    holdings[r.ticker] = (holdings[r.ticker] || 0) + r.quantity * multiplier;
+    sectors[r.sector] = (sectors[r.sector] || 0) + r.quantity * multiplier;
+    types[r.type] = (types[r.type] || 0) + r.quantity * multiplier;
+
+    const month = r.date.toLocaleString('default', { month: 'short' });
+    months[month] = (months[month] || 0) + (r.action === 'Buy' ? r.quantity * multiplier : -r.quantity * multiplier);
+  });
+
+  const gain = value - invested;
+  const best = perf.sort((a,b) => b.gain - a.gain)[0]?.ticker || '-';
+  const worst = perf.sort((a,b) => a.gain - b.gain)[0]?.ticker || '-';
+
+  updateSummary(invested, value, gain, monthly, shares, best, worst);
+  drawCharts({ dividends, holdings, sectors, months, types });
+}
+function updateSummary(invested, value, gain, monthly, shares, best, worst) {
+  document.getElementById('invested').innerText = `Invested: $${invested.toFixed(2)}`;
+  document.getElementById('value').innerText = `Value: $${value.toFixed(2)}`;
+  const gainBox = document.getElementById('gain');
+  gainBox.innerText = `Gain/Loss: $${gain.toFixed(2)}`;
+  gainBox.className = gain > 0 ? 'green' : gain < 0 ? 'red' : 'neutral';
+  document.getElementById('monthly').innerText = `Monthly: $${monthly.toFixed(2)}`;
+  document.getElementById('shares').innerText = `Shares: ${shares}`;
+  document.getElementById('best').innerText = `Best: ${best}`;
+  document.getElementById('worst').innerText = `Worst: ${worst}`;
+}
+
 function drawCharts(dataSets) {
   const configs = [
     { id: 'dividends', label: 'Dividends', data: dataSets.dividends, type: 'pie' },
@@ -90,85 +180,6 @@ function drawCharts(dataSets) {
       }
     });
   });
-}
-
-
-function readRow(row) {
-  const c = row.cells;
-  return {
-    type: c[0].querySelector('select').value,
-    ticker: c[1].innerText.trim(),
-    quantity: toFloat(c[2].innerText),
-    purchase: toFloat(c[3].innerText),
-    current: toFloat(c[4].innerText),
-    sector: c[5].querySelector('select').value,
-    dividend: toFloat(c[6].innerText),
-    action: c[7].querySelector('select').value,
-    date: new Date(c[8].innerText.trim()),
-    broker: c[9].querySelector('select').value,
-    multiplier: toFloat(c[10].innerText) || 1,
-    exit: toFloat(c[11].innerText),
-    exitDate: new Date(c[12].innerText.trim())
-  };
-}
-async function fetchPrice(ticker) {
-  const url = `https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=${ticker}&apikey=${API_KEY}`;
-  const res = await fetch(url);
-  const data = await res.json();
-  const price = parseFloat(data['Global Quote']?.['05. price']);
-  return isNaN(price) ? null : price;
-}
-
-async function updatePrices() {
-  for (const row of table.rows) {
-    const ticker = row.cells[1].innerText.trim();
-    if (!ticker) continue;
-    try {
-      const price = await fetchPrice(ticker);
-      if (price !== null) row.cells[4].innerText = price.toFixed(2);
-    } catch (err) {
-      console.warn(`Failed to fetch price for ${ticker}`);
-    }
-    await new Promise(r => setTimeout(r, 15000)); // 15s delay for rate limit
-  }
-  recalculate();
-}
-function recalculate() {
-  let invested = 0, value = 0, shares = 0, monthly = 0;
-  const perf = [], now = new Date().getMonth();
-  const dividends = {}, holdings = {}, sectors = {}, months = {}, types = {};
-
-  [...table.rows].forEach(row => {
-    const r = readRow(row);
-    if (!r.ticker || isNaN(r.quantity) || isNaN(r.purchase)) return;
-
-    const price = isNaN(r.exit) || !r.exitDate ? r.current : r.exit;
-    const multiplier = r.type === 'Option' ? r.multiplier : 1;
-
-    if (r.action === 'Buy') {
-      invested += r.quantity * r.purchase * multiplier;
-      if (r.date.getMonth() === now) monthly += r.quantity * r.purchase * multiplier;
-    }
-
-    shares += r.quantity * multiplier;
-    value += r.quantity * price * multiplier;
-    perf.push({ ticker: r.ticker, gain: (price - r.purchase) * r.quantity * multiplier + r.dividend });
-
-    dividends[r.ticker] = (dividends[r.ticker] || 0) + r.dividend;
-    holdings[r.ticker] = (holdings[r.ticker] || 0) + r.quantity * multiplier;
-    sectors[r.sector] = (sectors[r.sector] || 0) + r.quantity * multiplier;
-    types[r.type] = (types[r.type] || 0) + r.quantity * multiplier;
-
-    const month = r.date.toLocaleString('default', { month: 'short' });
-    months[month] = (months[month] || 0) + (r.action === 'Buy' ? r.quantity * multiplier : -r.quantity * multiplier);
-  });
-
-  const gain = value - invested;
-  const best = perf.sort((a,b) => b.gain - a.gain)[0]?.ticker || '-';
-  const worst = perf.sort((a,b) => a.gain - b.gain)[0]?.ticker || '-';
-
-  updateSummary(invested, value, gain, monthly, shares, best, worst);
-  drawCharts({ dividends, holdings, sectors, months, types });
 }
 function save() {
   const rows = [...table.rows].map(row =>
@@ -267,6 +278,7 @@ function parseCSVLine(line) {
   result.push(current);
   return result.map(cell => cell.trim());
 }
+
 function toggleDarkMode() {
   document.body.classList.toggle('dark');
   localStorage.setItem('darkMode', document.body.classList.contains('dark') ? '1' : '0');
