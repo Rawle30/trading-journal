@@ -50,6 +50,49 @@ function addRow() {
   table.appendChild(tr);
 }
 
+function drawCharts(dataSets) {
+  const configs = [
+    { id: 'dividends', label: 'Dividends', data: dataSets.dividends, type: 'pie' },
+    { id: 'holdings', label: 'Holdings', data: dataSets.holdings, type: 'bar' },
+    { id: 'sectors', label: 'Sectors', data: dataSets.sectors, type: 'doughnut' },
+    { id: 'monthlyChart', label: 'Monthly Buy/Sell', data: dataSets.months, type: 'line' },
+    { id: 'allocations', label: 'Allocations', data: dataSets.types, type: 'bar' }
+  ];
+
+  configs.forEach(({ id, label, data, type }) => {
+    const ctx = document.getElementById(id)?.getContext('2d');
+    if (!ctx) return;
+    if (charts[id]) charts[id].destroy();
+    charts[id] = new Chart(ctx, {
+      type,
+      data: {
+        labels: Object.keys(data),
+        datasets: [{
+          label,
+          data: Object.values(data),
+          backgroundColor: [
+            '#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0',
+            '#00bcd4', '#ffc107', '#8bc34a', '#3f51b5', '#f44336'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { labels: { font: { size: 13 } } },
+          tooltip: { bodyFont: { size: 13 }, titleFont: { size: 14 } }
+        },
+        scales: (type === 'bar' || type === 'line') ? {
+          y: { beginAtZero: true, ticks: { font: { size: 12 } } },
+          x: { ticks: { font: { size: 12 } } }
+        } : {}
+      }
+    });
+  });
+}
+
+
 function readRow(row) {
   const c = row.cells;
   return {
