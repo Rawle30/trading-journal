@@ -33,24 +33,25 @@ function createTextCell(value) {
 function addRow() {
   const tr = document.createElement('tr');
   const cells = [
-    createDropdownCell('', typeOptions),
-    createTextCell(''), // Ticker
-    createTextCell(''), // Shares
-    createTextCell(''), // Purchase Price
-    createTextCell('Fetching...'), // Current Price (auto-filled)
-    createDropdownCell('', sectorOptions),
-    createTextCell(''), // Dividend
-    createDropdownCell('', actionOptions),
-    createTextCell(''), // Date
-    createTextCell('...') // Gain/Loss (auto-filled)
+    createDropdownCell('', typeOptions),     // Type
+    createTextCell(''),                      // Ticker
+    createTextCell(''),                      // Shares
+    createTextCell(''),                      // Purchase Price
+    createTextCell(''),                      // Current Price (editable)
+    createDropdownCell('', sectorOptions),   // Sector
+    createTextCell(''),                      // Dividend
+    createDropdownCell('', actionOptions),   // Buy/Sell
+    createTextCell(''),                      // Date
+    createTextCell('...')                    // Gain/Loss (auto)
   ];
   cells.forEach(td => tr.appendChild(td));
   table.appendChild(tr);
 }
 
+
 function savePortfolio() {
   const rows = [...table.rows].map(row =>
-    [...row.cells].slice(0, 9).map(cell => {
+    [...row.cells].slice(0, 10).map(cell => {
       const select = cell.querySelector('select');
       return select ? select.value : cell.innerText.trim();
     })
@@ -73,6 +74,24 @@ function loadPortfolio() {
       else td = createTextCell(cell);
       tr.appendChild(td);
     });
+
+    const [type, ticker, qty, price, current, , , action] = row;
+    const q = parseFloat(qty), p = parseFloat(price), c = parseFloat(current);
+
+    const gainTd = document.createElement('td');
+    if (!isNaN(p) && !isNaN(c) && !isNaN(q)) {
+      const gainCell = renderGainLossCell(p, c, q);
+      tr.appendChild(gainCell);
+    } else {
+      gainTd.innerText = '...';
+      tr.appendChild(gainTd);
+    }
+
+    table.appendChild(tr);
+  });
+  updateMetrics(data);
+  drawCharts(data);
+}
 
     const currentPriceTd = createTextCell('Fetching...');
     tr.insertBefore(currentPriceTd, tr.children[4]);
