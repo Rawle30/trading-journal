@@ -1,261 +1,33 @@
-import { fetchCurrentPrice, renderGainLossCell } from './price.js';
-
-const table = document.querySelector('#portfolioTable tbody');
-const typeOptions = ['Stock', 'Option', 'ETF', 'Dividend'];
-const actionOptions = ['Buy', 'Sell'];
-const sectorOptions = ['Technology', 'Finance', 'Healthcare', 'Energy', 'Consumer', 'Utilities', 'Other'];
-
-function toggleDarkMode() {
-  document.body.classList.toggle('dark');
-}
-
-function createDropdownCell(value, options) {
+function createCell(value = '') {
   const td = document.createElement('td');
-  const select = document.createElement('select');
-  options.forEach(opt => {
-    const option = document.createElement('option');
-    option.value = opt;
-    option.text = opt;
-    if (opt === value) option.selected = true;
-    select.appendChild(option);
-  });
-  td.appendChild(select);
-  return td;
-}
-
-function createTextCell(value) {
-  const td = document.createElement('td');
-  td.innerText = value;
   td.contentEditable = true;
+  td.innerText = value;
   return td;
 }
 
-function addRow() {
+window.addRow = function () {
   const tr = document.createElement('tr');
-  const cells = [
-    createDropdownCell('', typeOptions),
-    createTextCell(''), // Ticker
-    createTextCell(''), // Shares
-    createTextCell(''), // Purchase Price
-    createTextCell(''), // Current Price
-    createDropdownCell('', sectorOptions),
-    createTextCell(''), // Dividend
-    createDropdownCell('', actionOptions),
-    createTextCell(''), // Date
-    createTextCell('...') // Gain/Loss
-  ];
-  cells.forEach(td => tr.appendChild(td));
-  table.appendChild(tr);
-}
+  ['','','','','...'].forEach((val, i) => {
+    const td = i < 4 ? createCell(val) : document.createElement('td');
+    if (i === 4) td.innerText = '...';
+    tr.appendChild(td);
+  });
+  document.querySelector('#portfolioTable tbody').appendChild(tr);
+};
 
-function savePortfolio() {
-  const rows = [...table.rows].map(row =>
-    [...row.cells].slice(0, 10).map(cell => {
-      const select = cell.querySelector('select');
-      return select ? select.value : cell.innerText.trim();
-    })
+window.savePortfolio = function () {
+  const rows = [...document.querySelectorAll('#portfolioTable tbody tr')].map(row =>
+    [...row.cells].map(cell => cell.innerText.trim())
   );
   localStorage.setItem('portfolioData', JSON.stringify(rows));
-  updateMetrics(rows);
-  drawCharts(rows);
-}
+};
 
-function loadPortfolio() {
-  const data = JSON.parse(localStorage.getItem('portfolioData') || '[]');
-  table.innerHTML = '';
-  data.forEach(row => {
-    const tr = document.createElement('tr');
-    row.forEach((cell, i) => {
-      let td;
-      if (i === 0) td = createDropdownCell(cell, typeOptions);
-      else if (i === 7) td = createDropdownCell(cell, actionOptions);
-      else if (i === 5) td = createDropdownCell(cell, sectorOptions);
-      else td = createTextCell(cell);
-      tr.appendChild(td);
-    });
-
-    const [type, ticker, qty, price, current] = row;
-    const q = parseFloat(qty), p = parseFloat(price), c = parseFloat(current);
-
-    const gainTd = document.createElement('td');
-    if (!isNaN(q) && !isNaN(p) && !isNaN(c)) {
-      const gainCell = renderGainLossCell(p, c, q);
-      tr.appendChild(gainCell);
-    } else {
-      gainTd.innerText = '...';
-      tr.appendChild(gainTd);
-    }
-
-    table.appendChild(tr);
+window.recalculateGainLoss = function () {
+  [...document.querySelectorAll('#portfolioTable tbody tr')].forEach(row => {
+    const [ticker, qty, price, current] = row.cells.map(c => parseFloat(c.innerText.trim()));
+    const gain = (!isNaN(qty) && !isNaN(price) && !isNaN(current)) ? (current - price) * qty : '...';
+    row.cells[4].innerText = typeof gain === 'number' ? `$${gain.toFixed(2)}` : '...';
   });
-  updateMetrics(data);
-  drawCharts(data);
-}
+};
 
-function recalculateGainLoss() {
-  [...table.rows].forEach(row => {
-    const cells = row.cells;
-    const qty = parseFloat(cells[2].innerText.trim());
-    const purchase = parseFloat(cells[3].innerText.trim());
-    const current = parseFloat(cells[4].innerText.trim());
-
-    if (!isNaN(qty) && !isNaN(purchase) && !isNaN(current)) {
-      const gainCell = renderGainLossCell(purchase, current, qty);
-      row.replaceChild(gainCell, cells[9]);
-    } else {
-      cells[9].innerText = '...';
-    }
-  });
-}
-
-function exportCSV() {
-  const rows = [...table.rows].map(row =>
-    [...row.cells].slice(0, 10).map(cell => {
-      const select = cell.querySelector('select');
-      return `"${select ? select.value : cell.innerText.trim()}"`;
-    }).join(',')
-  );
-  const blob = new Blob([rows.join('\n')], { type: 'text/csv' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = 'portfolio.csv';
-  a.click();
-}
-
-function importCSV(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    const lines = e.target.result.split('\n');
-    table.innerHTML = '';
-    lines.forEach(line => {
-      const tr = document.createElement('tr');
-      line.split(',').forEach((cell, i) => {
-        let td;
-        const value = cell.replace(/"/g, '');
-        if (i === 0) td = createDropdownCell(value, typeOptions);
-        else if (i === 7) td = createDropdownCell(value, actionOptions);
-        else if (i === 5) td = createDropdownCell(value, sectorOptions);
-        else td = createTextCell(value);
-        tr.appendChild(td);
-      });
-
-      const [type, ticker, qty, price, current] = line.split(',').map(c => c.replace(/"/g, ''));
-      const q = parseFloat(qty), p = parseFloat(price), c = parseFloat(current);
-
-      const gainTd = document.createElement('td');
-      if (!isNaN(q) && !isNaN(p) && !isNaN(c)) {
-        const gainCell = renderGainLossCell(p, c, q);
-        tr.appendChild(gainCell);
-      } else {
-        gainTd.innerText = '...';
-        tr.appendChild(gainTd);
-      }
-
-      table.appendChild(tr);
-    });
-    savePortfolio();
-  };
-  reader.readAsText(file);
-}
-
-function updateMetrics(data) {
-  let invested = 0, value = 0, shares = 0, monthly = 0;
-  let perf = [], now = new Date().getMonth();
-
-  data.forEach(([type, ticker, qty, price, , sector, div, action, date]) => {
-    const q = parseFloat(qty), p = parseFloat(price), d = parseFloat(div || 0);
-    if (action.toLowerCase() === 'buy') {
-      invested += q * p;
-      shares += q;
-      if (new Date(date).getMonth() === now) monthly += q * p;
-    }
-    value += q * p;
-    perf.push({ ticker, gain: d + (q * p) });
-  });
-
-  const gain = value - invested;
-  const best = perf.sort((a,b) => b.gain - a.gain)[0]?.ticker || '-';
-  const worst = perf.sort((a,b) => a.gain - b.gain)[0]?.ticker || '-';
-
-  document.getElementById('investedCapital').innerText = `Invested Capital: $${invested.toFixed(2)}`;
-  document.getElementById('portfolioValue').innerText = `Portfolio Value: $${value.toFixed(2)}`;
-  document.getElementById('gainLoss').innerText = `Gain/Loss: $${gain.toFixed(2)}`;
-  document.getElementById('gainLoss').className = `summary-box ${gain >= 0 ? 'green' : 'red'}`;
-  document.getElementById('monthlyInvestment').innerText = `Monthly Investment: $${monthly.toFixed(2)}`;
-  document.getElementById('totalShares').innerText = `Total Shares Held: ${shares}`;
-  document.getElementById('bestPerformer').innerText = `Best Performing: ${best}`;
-  document.getElementById('worstPerformer').innerText = `Worst Performing: ${worst}`;
-}
-
-function drawCharts(data) {
-  const ctxs = ['dividendChart','sharesChart','sectorChart','monthlyChart','allocationChart'].map(id => {
-    const canvas = document.getElementById(id);
-    return canvas.getContext('2d');
-  });
-
-  const tickers = {}, sectors = {}, months = {}, dividends = {}, types = {};
-
-  data.forEach(([type, ticker, qty, price, , sector, div, action, date]) => {
-    const q = parseFloat(qty), d = parseFloat(div || 0);
-    tickers[ticker] = (tickers[ticker] || 0) + q;
-    sectors[sector] = (sectors[sector] || 0) + q;
-    dividends[ticker] = (dividends[ticker] || 0) + d;
-    types[type] = (types[type] || 0) + q;
-    const m = new Date(date).toLocaleString('default', { month: 'short' });
-    months[m] = (months[m] || 0) + (action.toLowerCase() === 'buy' ? 1 : -1);
-  });
-
-  const chartData = [
-    { ctx: ctxs[0], label: 'Dividends', data: dividends },
-    { ctx: ctxs[1], label: 'Shares Held', data: tickers },
-    { ctx: ctxs[2], label: 'Sectors', data: sectors },
-    { ctx: ctxs[3], label: 'Monthly Buy/Sell', data: months },
-    { ctx: ctxs[4], label: 'Allocations', data: types }
-  ];
-  chartData.forEach(({ ctx, label, data }) => {
-    new Chart(ctx, {
-      type: label === 'Monthly Buy/Sell' ? 'line' : (label === 'Sectors' ? 'doughnut' : (label === 'Allocations' ? 'bar' : 'pie')),
-      data: {
-        labels: Object.keys(data),
-        datasets: [{
-          label,
-          data: Object.values(data),
-          backgroundColor: [
-            '#4caf50', '#2196f3', '#ff9800', '#e91e63', '#9c27b0',
-            '#00bcd4', '#ffc107', '#8bc34a', '#3f51b5', '#f44336'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { display: true },
-          tooltip: { mode: 'index', intersect: false }
-        },
-        scales: label === 'Monthly Buy/Sell' || label === 'Allocations' ? {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              color: getComputedStyle(document.body).getPropertyValue('--text')
-            }
-          },
-          x: {
-            ticks: {
-              color: getComputedStyle(document.body).getPropertyValue('--text')
-            }
-          }
-        } : {}
-      }
-    });
-  });
-}
-
-table.addEventListener('input', () => {
-  recalculateGainLoss();
-});
-
-loadPortfolio 
 
