@@ -1,84 +1,99 @@
+/* 🌙 Dark Mode Variables */
 :root {
-  --bg: #fff;
-  --text: #000;
+  --bg: #ffffff;
+  --text: #000000;
   --box: #f0f0f0;
-  --green: green;
-  --red: red;
+  --green: #2e7d32;
+  --red: #c62828;
 }
+
 body.dark {
-  --bg: #121212;
-  --text: #eee;
-  --box: #1e1e1e;
+  --bg: #0f1720;
+  --text: #e6eef6;
+  --box: #1a1f24;
+  --green: #66bb6a;
+  --red: #ef5350;
 }
+
 body {
-  background: var(--bg);
+  background-color: var(--bg);
   color: var(--text);
-  font-family: sans-serif;
+  font-family: 'Segoe UI', sans-serif;
   margin: 0;
   padding: 1rem;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.controls {
-  margin: 1rem 0;
-}
-button {
-  margin-right: 0.5rem;
-  padding: 0.4rem 0.8rem;
-}
-.summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-.summary div {
-  background: var(--box);
-  padding: 0.5rem;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-.green { color: var(--green); }
-.red { color: var(--red); }
-.neutral { color: inherit; }
 
-.table-wrapper {
+/* 📦 Compact Table Box */
+.table-wrapper.compact-table-box {
+  max-height: 320px;
+  max-width: 100%;
   overflow-x: auto;
-  max-height: 400px;
   overflow-y: auto;
   border: 1px solid #ccc;
+  padding: 0.25rem;
 }
+
+/* 📋 Table Styling */
 #portfolioTable {
   width: max-content;
   border-collapse: collapse;
-  font-size: 0.8rem;
-}
-#portfolioTable th, #portfolioTable td {
-  border: 1px solid #ccc;
-  padding: 0.3rem 0.5rem;
-  text-align: center;
-  min-width: 100px;
-}
-#portfolioTable td[contenteditable="true"] {
-  background: #eef;
-}
-#portfolioTable select {
-  width: 100%;
-  font-size: 0.8rem;
+  font-size: 0.75rem;
 }
 
+#portfolioTable th,
+#portfolioTable td {
+  border: 1px solid #ccc;
+  padding: 0.2rem 0.4rem;
+  text-align: center;
+  min-width: 90px;
+}
+
+.editable-cell {
+  background-color: #eef;
+  padding: 0.2rem;
+}
+
+/* 📊 Chart Container */
 .charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
   margin-top: 1rem;
 }
+
 canvas {
   width: 100% !important;
-  height: 250px !important;
+  height: 280px !important;
+}
+
+/* 📦 Summary Boxes */
+.summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.summary div {
+  background-color: var(--box);
+  padding: 0.5rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.green { color: var(--green); }
+.red { color: var(--red); }
+.neutral { color: inherit; }
+
+/* 🌓 Dark Mode Toggle Button (optional) */
+header button {
+  background: var(--box);
+  color: var(--text);
+  border: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 
