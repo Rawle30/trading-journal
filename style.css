@@ -44,32 +44,7 @@ button {
 .green { color: var(--green); }
 .red { color: var(--red); }
 .neutral { color: inherit; }
-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.85rem;
-}
-th, td {
-  border: 1px solid #ccc;
-  padding: 0.3rem;
-  text-align: center;
-}
-td[contenteditable="true"] {
-  background: #eef;
-}
-select {
-  width: 100%;
-}
-.charts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-top: 1rem;
-}
-canvas {
-  width: 100% !important;
-  height: 250px !important;
-}
+
 .table-wrapper {
   overflow-x: auto;
   max-height: 400px;
@@ -94,6 +69,18 @@ canvas {
   width: 100%;
   font-size: 0.8rem;
 }
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+canvas {
+  width: 100% !important;
+  height: 250px !important;
+}
+
 
 
 
