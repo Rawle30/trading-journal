@@ -7,32 +7,50 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>📈 Portfolio Tracker</h1>
-  <div class="controls">
+  <header>
+    <h1>📊 Portfolio Tracker</h1>
+    <button onclick="toggleDarkMode()">🌓 Dark Mode</button>
+  </header>
+
+  <section class="controls">
     <button onclick="addRow()">➕ Add Row</button>
-    <button onclick="recalculateGainLoss()">🔄 Recalculate Gain/Loss</button>
+    <button onclick="recalculateGainLoss()">🔄 Recalculate</button>
     <button onclick="savePortfolio()">💾 Save</button>
     <button onclick="exportCSV()">⬇️ Export CSV</button>
     <input type="file" onchange="importCSV(event)" />
-  </div>
+  </section>
+
+  <section class="summary">
+    <div id="investedCapital" class="box">Invested Capital: $0</div>
+    <div id="portfolioValue" class="box">Portfolio Value: $0</div>
+    <div id="gainLoss" class="box">Gain/Loss: $0</div>
+    <div id="monthlyInvestment" class="box">Monthly Investment: $0</div>
+    <div id="totalShares" class="box">Total Shares Held: 0</div>
+    <div id="bestPerformer" class="box">Best Performing: -</div>
+    <div id="worstPerformer" class="box">Worst Performing: -</div>
+  </section>
 
   <table id="portfolioTable">
     <thead>
       <tr>
-        <th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Current</th><th>Buy/Sell</th><th>Date</th><th>Gain/Loss</th>
+        <th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Current</th><th>Sector</th><th>Dividend</th><th>Buy/Sell</th><th>Date</th><th>Gain/Loss</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
 
-  <div class="chart-container">
-    <canvas id="allocationChart"></canvas>
+  <section class="charts">
+    <canvas id="dividendChart"></canvas>
+    <canvas id="sharesChart"></canvas>
+    <canvas id="sectorChart"></canvas>
     <canvas id="monthlyChart"></canvas>
-  </div>
+    <canvas id="allocationChart"></canvas>
+  </section>
 
   <script src="app.js"></script>
 </body>
 </html>
+
 
 
 
