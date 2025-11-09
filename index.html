@@ -2,50 +2,24 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Portfolio Tracker</title>
-  <link rel="stylesheet" href="style.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-  <h1>📈 Portfolio Tracker</h1>
-  <button onclick="toggleDarkMode()">Toggle Dark Mode</button>
-  <button onclick="addRow()">➕ Add Row</button>
-  <button onclick="savePortfolio()">💾 Save</button>
-  <button onclick="recalculateGainLoss()">🔄 Recalculate Gain/Loss</button>
-  <button onclick="exportCSV()">⬇️ Export CSV</button>
-  <input type="file" onchange="importCSV(event)" />
-
-  <div id="metrics">
-    <div class="summary-box" id="investedCapital">Invested Capital: $0</div>
-    <div class="summary-box" id="portfolioValue">Portfolio Value: $0</div>
-    <div class="summary-box" id="gainLoss">Gain/Loss: $0</div>
-    <div class="summary-box" id="monthlyInvestment">Monthly Investment: $0</div>
-    <div class="summary-box" id="totalShares">Total Shares Held: 0</div>
-    <div class="summary-box" id="bestPerformer">Best Performing: -</div>
-    <div class="summary-box" id="worstPerformer">Worst Performing: -</div>
-  </div>
-
+  <button onclick="addRow()">Add Row</button>
+  <button onclick="savePortfolio()">Save</button>
+  <button onclick="recalculateGainLoss()">Recalculate Gain/Loss</button>
   <table id="portfolioTable">
     <thead>
       <tr>
-        <th>Type</th><th>Ticker</th><th>Shares</th><th>Price</th><th>Current Price</th><th>Sector</th><th>Dividend</th><th>Buy/Sell</th><th>Date</th><th>Gain/Loss</th>
+        <th>Ticker</th><th>Shares</th><th>Price</th><th>Current</th><th>Gain/Loss</th>
       </tr>
     </thead>
     <tbody></tbody>
   </table>
-
-  <div class="chart-container">
-    <canvas id="dividendChart"></canvas>
-    <canvas id="sharesChart"></canvas>
-    <canvas id="sectorChart"></canvas>
-    <canvas id="monthlyChart"></canvas>
-    <canvas id="allocationChart"></canvas>
-  </div>
-
   <script type="module" src="app.js"></script>
 </body>
 </html>
+
 
 
 
